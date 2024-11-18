@@ -432,7 +432,10 @@ class GNSSNTRIPClient:
                         self._prev_gga = (gga, _)
                         self.logger.info(f"gga data: {_}")
                     else:
-                        gga, _ = self._format_gga()
+                        if self._prev_gga is not None:
+                            gga, _ = self._prev_gga
+                        else:
+                            gga, _ = self._format_gga()
 
                 except:
                     gga, _ = self._format_gga()
