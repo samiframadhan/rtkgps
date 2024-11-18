@@ -125,6 +125,7 @@ class GNSSNTRIPClient:
         self._response_status = {}
         self._response_body = None
         self._gga_queue = None
+        self._prev_gga = None
         self._output = None
 
     def __enter__(self):
@@ -425,8 +426,14 @@ class GNSSNTRIPClient:
         else:
             if gga_data is not None:
                 try:
-                    gga, _ = gga_data.get(True)
-                    gga_data.task_done()
+                    if not gga_data.empty():
+                        gga, _ = gga_data.get()
+                        gga_data.task_done()
+                        self._prev_gga = (gga, _)
+                        self.logger.info(f"gga data: {_}")
+                    else:
+                        gga, _ = self._format_gga()
+
                 except:
                     gga, _ = self._format_gga()
             else:
