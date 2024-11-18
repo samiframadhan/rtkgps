@@ -91,7 +91,7 @@ def process_data(gga_queue: Queue, data_queue: Queue, stop: Event):
             if parsed.msgID == "GGA":
                 fix = "3d" if parsed.quality == 1 else "2d"
                 print(f"Fix : {parsed.quality}, Long :{parsed.lon}, Lat :{parsed.lat}")
-                gga_queue.put(raw_data)
+                gga_queue.put((raw_data, parsed))
             data_queue.task_done()
 
 def main(**kwargs):

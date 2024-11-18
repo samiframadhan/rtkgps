@@ -425,7 +425,7 @@ class GNSSNTRIPClient:
         else:
             if gga_data is not None:
                 try:
-                    gga = gga_data.get(True)
+                    gga, _ = gga_data.get(True)
                 except:
                     gga, _ = self._format_gga()
             else:
@@ -652,7 +652,10 @@ class GNSSNTRIPClient:
 
         if ggainterval != NOGGA:
             if datetime.now() > self._last_gga + timedelta(seconds=ggainterval):
-                raw_data, parsed_data = self._format_gga()
+                if gga_data is not None:
+                    raw_data, parsed_data = gga_data.get()
+                else:
+                    raw_data, parsed_data = self._format_gga()
                 if parsed_data is not None:
                     sock.sendall(raw_data)
                     self._do_output(output, raw_data, parsed_data)
