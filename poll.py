@@ -46,6 +46,7 @@ from ntripclient import GNSSNTRIPClient
 logger = getLogger("rtkgps")
 set_logging(getLogger("ntripclient"), VERBOSITY_DEBUG)
 set_logging(getLogger("rtkgps"), VERBOSITY_DEBUG)
+poll_str = ["GGA", "GLL", "GNS", "LR2", "MOB", "RMA", "RMB", "RMC", "TRF", "WPL", "BWC", "BWR"]
 
 def io_data(
     stream: object,
@@ -96,10 +97,10 @@ def process_data(gga_queue: Queue, data_queue: Queue, stop: Event):
         if data_queue.empty() is False:
             (raw_data, parsed) = data_queue.get()
             # logger.info(parsed)
-            if parsed.msgID == "GGA":
-                fix = "3d" if parsed.quality == 1 else "2d"
-                logger.info(f"Fix : {parsed.quality}, Long :{parsed.lon}, Lat :{parsed.lat}")
-                gga_queue.put((raw_data, parsed))
+            if hasattr(parsed, "lat") and hasattr(parsed, "lon"):
+                logger.info(f"MSGID: {parsed.msgID}. Long :{parsed.lon}, Lat :{parsed.lat}, Alt :{parsed.alt}")
+                if parsed.msgID == "GGA":
+                    gga_queue.put((raw_data, parsed))
             data_queue.task_done()
 
 def ntrip(gga_queue: Queue, send_queue: Queue, kwargs):
@@ -167,7 +168,6 @@ def main(**kwargs):
         io_thread.start()
         process_thread.start()
 
-        poll_str = ["GGA"]
 
         # loop until user presses Ctrl-C
         while not stop_event.is_set():
