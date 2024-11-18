@@ -13,7 +13,7 @@ It implements two threads which run concurrently:
 1) an I/O thread which continuously reads NMEA data from the
 receiver and sends any queued outbound command or poll messages.
 2) a process thread which processes parsed NMEA data - in this example
-it simply prints the parsed data to the terminal.
+it simply logger.infos the parsed data to the terminal.
 NMEA data is passed between threads using queues.
 
 Press CTRL-C to terminate.
@@ -42,6 +42,9 @@ from pynmeagps import NMEA_MSGIDS, POLL, NMEAMessage, NMEAReader
 from pygnssutils import VERBOSITY_HIGH, VERBOSITY_DEBUG, set_logging
 
 from ntripclient import GNSSNTRIPClient
+
+logger = getLogger("rtkgps")
+set_logging(getLogger("ntripclient"), VERBOSITY_DEBUG)
 
 def io_data(
     stream: object,
@@ -78,7 +81,7 @@ def io_data(
                 sendqueue.task_done()
 
         except Exception as err:
-            print(f"\n\nSomething went wrong {err}\n\n")
+            logger.info(f"\n\nSomething went wrong {err}\n\n")
             continue
 
 
@@ -91,10 +94,10 @@ def process_data(gga_queue: Queue, data_queue: Queue, stop: Event):
     while not stop.is_set():
         if data_queue.empty() is False:
             (raw_data, parsed) = data_queue.get()
-            # print(parsed)
+            # logger.info(parsed)
             if parsed.msgID == "GGA":
                 fix = "3d" if parsed.quality == 1 else "2d"
-                print(f"Fix : {parsed.quality}, Long :{parsed.lon}, Lat :{parsed.lat}")
+                logger.info(f"Fix : {parsed.quality}, Long :{parsed.lon}, Lat :{parsed.lat}")
                 gga_queue.put((raw_data, parsed))
             data_queue.task_done()
 
@@ -159,7 +162,7 @@ def main(**kwargs):
 
         ntrip(gga_queue, send_queue, kwargs)
 
-        print("\nStarting handler threads. Press Ctrl-C to terminate...")
+        logger.info("\nStarting handler threads. Press Ctrl-C to terminate...")
         io_thread.start()
         process_thread.start()
 
@@ -173,7 +176,7 @@ def main(**kwargs):
                 # NB: Your receiver may not support all types. It will return a
                 # GNTXT "NMEA unknown msg" response for any types it doesn't support.
                 for msgid in poll_str:
-                    # print(
+                    # logger.info(
                     #     f"\nSending a GNQ message to poll for an {msgid} response...\n"
                     # )
                     msg = NMEAMessage("EI", "GNQ", POLL, msgId=msgid)
@@ -183,13 +186,13 @@ def main(**kwargs):
                 # stop_event.set()
 
             except KeyboardInterrupt:  # capture Ctrl-C
-                print("\n\nTerminated by user.")
+                logger.info("\n\nTerminated by user.")
                 stop_event.set()
 
-        print("\nStop signal set. Waiting for threads to complete...")
+        logger.info("\nStop signal set. Waiting for threads to complete...")
         io_thread.join()
         process_thread.join()
-        print("\nProcessing complete")
+        logger.info("\nProcessing complete")
 
 
 if __name__ == "__main__":
