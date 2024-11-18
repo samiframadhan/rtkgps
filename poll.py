@@ -178,7 +178,7 @@ def main(**kwargs):
                     # )
                     msg = NMEAMessage("EI", "GNQ", POLL, msgId=msgid)
                     send_queue.put(msg)
-                    # sleep(0.5)
+                    sleep(0.5)
                 # sleep(5)
                 # stop_event.set()
 
