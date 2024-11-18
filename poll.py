@@ -34,85 +34,14 @@ from sys import argv
 from os import getenv
 from threading import Event, Thread
 from time import sleep
+from logging import getLogger
 
 from serial import Serial
 
 from pynmeagps import NMEA_MSGIDS, POLL, NMEAMessage, NMEAReader
-from pygnssutils import VERBOSITY_HIGH, GNSSNTRIPClient, set_logging
+from pygnssutils import VERBOSITY_HIGH, set_logging
 
-import socket
-import base64
-import time
-from datetime import datetime, timedelta
-
-class NTRIPClient:
-    def _init_(self):
-        # NTRIP server settings
-        self.server = "69.64.185.41"
-        self.port = 7801
-        self.mountpoint = "MSM5"
-        self.user = "grk28"
-        self.password = "730d2"
-        
-        # Create socket
-        self.socket = socket.create_connection((socket.gethostbyname(self.server), int(self.port)), timeout=0.1)
-        
-    def connect(self):
-        try:
-            # Connect to server
-            print("connecting to server...")
-            self.socket.connect((self.server, self.port))
-            
-            # Create HTTP request
-            auth = base64.b64encode(f"{self.username}:{self.password}".encode()).decode()
-            request = (
-                f"GET /{self.mountpoint} HTTP/1.1\r\n"
-                f"Host: {self.server}:{self.port}\r\n"
-                f"Ntrip-Version: Ntrip/2.0\r\n"
-                f"User-Agent: NTRIP rtkconnect/1.0\r\n"
-                f"Authorization: Basic {auth}\r\n"
-                f"Connection: close\r\n"
-                "\r\n"
-            )
-            
-            print("Sending request...")
-            # Send request
-            self.socket.sendall(request.encode())
-            
-            # Check response
-            response = self.socket.recv(4096).decode()
-            if "ICY 200 OK" not in response:
-                raise Exception(f"Server response error: {response}")
-            
-            print("Connected to NTRIP caster successfully")
-            return True
-            
-        except Exception as e:
-            print(f"Connection failed: {str(e)}")
-            return False
-    
-    def send_gga(self, gga_string):
-        try:
-            # Add CRLF to GGA string
-            gga_string = f"{gga_string}\r\n"
-            self.socket.sendall(gga_string.encode())
-            return True
-        except Exception as e:
-            print(f"Failed to send GGA: {str(e)}")
-            return False
-    
-    def receive_rtcm(self):
-        try:
-            # Receive RTCM data (adjust buffer size as needed)
-            data = self.socket.recv(1024)
-            return data
-        except Exception as e:
-            print(f"Failed to receive RTCM: {str(e)}")
-            return None
-    
-    def close(self):
-        self.socket.shutdown(socket.SHUT_WR)
-        self.socket.close()
+from ntripclient import GNSSNTRIPClient
 
 def io_data(
     stream: object,
@@ -165,46 +94,6 @@ def process_data(gga_queue: Queue, data_queue: Queue, stop: Event):
                 gga_queue.put(raw_data)
             data_queue.task_done()
 
-def ntrip_correction(gga_queue : Queue, rtcm_correction_queue : Queue, stop: Event):
-    gnc = GNSSNTRIPClient()
-    gnc.run(
-        server = "69.64.185.41",
-        port = 7801,
-        mountpoint = "MSM5",
-        ntripuser = "grk28",
-        ntrippassword = "730d2",
-        gga_interval=30,
-    )
-
-    
-    client = NTRIPClient()
-    _last_gga = datetime.now()
-
-    while not stop.is_set():
-
-        if not client.connect():
-            return
-        else:
-            data = client.receive_rtcm()
-            rtcm_correction_queue.put(data)
-            if datetime.now() > _last_gga + timedelta(seconds=2):
-                if not gga_queue.empty():
-                    gga_data = gga_queue.get()
-                    client.send_gga(gga_string=gga_data)
-                    gga_queue.task_done()
-                else:
-                    print("No GGA data received yet")
-
-    print("Yeay")
-    client.close()
-
-def send_correction(stream : object, send : Queue, rtcm_correction_queue : Queue, stop : Event):
-    while not stop.is_set():
-        if not rtcm_correction_queue.empty:
-            data = rtcm_correction_queue.get()
-            stream.write(data)
-            rtcm_correction_queue.task_done()
-
 def main(**kwargs):
     """
     Main routine.
@@ -218,7 +107,6 @@ def main(**kwargs):
         nmeareader = NMEAReader(serial_stream)
 
         read_queue = Queue()
-        rtcm_correction_queue = Queue()
         gga_queue = Queue()
         send_queue = Queue()
         stop_event = Event()
@@ -242,19 +130,33 @@ def main(**kwargs):
             ),
         )
 
-        ntrip_thread = Thread(
-            target=ntrip_correction,
-            args=(
-                gga_queue,
-                rtcm_correction_queue,
-                stop_event
-            )
+        logger = getLogger("pygnssutils.gnssntripclient")
+        set_logging(logger, VERBOSITY_HIGH)
+        server = kwargs.get("server", "69.64.185.41")
+        port = int(kwargs.get("port", 7801))
+        mountpoint = kwargs.get("mountpoint", "MSM5")
+        user = kwargs.get("user", getenv("PYGPSCLIENT_USER", "grk28"))
+        password = kwargs.get("password", getenv("PYGPSCLIENT_PASSWORD", "730d2"))
+
+        gnc = GNSSNTRIPClient()
+        gnc.run(
+            server=server,
+            port=port,
+            https=0,
+            mountpoint=mountpoint,
+            datatype="RTCM",
+            ntripuser=user,
+            ntrippassword=password,
+            ggainterval=1,
+            gga_data=gga_queue,
+            output=send_queue,
         )
 
         print("\nStarting handler threads. Press Ctrl-C to terminate...")
         io_thread.start()
         process_thread.start()
-        ntrip_thread.start()
+
+        poll_str = ["GGA"]
 
         # loop until user presses Ctrl-C
         while not stop_event.is_set():
@@ -263,7 +165,7 @@ def main(**kwargs):
                 # Poll for each NMEA sentence type.
                 # NB: Your receiver may not support all types. It will return a
                 # GNTXT "NMEA unknown msg" response for any types it doesn't support.
-                for msgid in NMEA_MSGIDS:
+                for msgid in poll_str:
                     print(
                         f"\nSending a GNQ message to poll for an {msgid} response...\n"
                     )
@@ -280,7 +182,6 @@ def main(**kwargs):
         print("\nStop signal set. Waiting for threads to complete...")
         io_thread.join()
         process_thread.join()
-        ntrip_thread.join()
         print("\nProcessing complete")
 
 

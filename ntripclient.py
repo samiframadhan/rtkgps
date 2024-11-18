@@ -124,6 +124,7 @@ class GNSSNTRIPClient:
         self._response_headers = {}
         self._response_status = {}
         self._response_body = None
+        self._gga_queue = None
         self._output = None
 
     def __enter__(self):
@@ -183,6 +184,7 @@ class GNSSNTRIPClient:
             self._last_gga = datetime.fromordinal(1)
             self.settings = kwargs
             self._output = kwargs.get("output", None)
+            self._gga_queue = kwargs.get("gga_data", None)
 
             if self._settings["server"] == "":
                 raise ParameterError(f"Invalid server URL {self._settings['server']}")
@@ -202,6 +204,7 @@ class GNSSNTRIPClient:
             args=(
                 self._settings,
                 self._stopevent,
+                self._gga_queue,
                 self._output,
             ),
             daemon=True,
@@ -223,6 +226,7 @@ class GNSSNTRIPClient:
         self,
         settings: dict,
         stopevent: Event,
+        gga_data: Queue,
         output: object,
     ):
         """
@@ -245,7 +249,7 @@ class GNSSNTRIPClient:
 
             try:
                 sock = self._open_connection(settings)
-                if not self._do_request(sock, settings, stopevent, output):
+                if not self._do_request(sock, settings, stopevent, gga_data, output):
                     # bad response or sourcetable, so quit
                     self.stop()
                     break
@@ -336,6 +340,7 @@ class GNSSNTRIPClient:
         sock: socket,
         settings: dict,
         stopevent: Event,
+        gga_data: Queue,
         output: object,
     ) -> int:
         """
@@ -349,7 +354,7 @@ class GNSSNTRIPClient:
         :raises: Various socket error types if connection fails
         """
 
-        request_headers = self._set_headers(settings)
+        request_headers = self._set_headers(settings, gga_data)
         self.logger.debug(f"Request headers:\n{request_headers}")
         self._response_body = b""
         response_header = True
@@ -375,6 +380,7 @@ class GNSSNTRIPClient:
                         sock,
                         settings,
                         stopevent,
+                        gga_data,
                         output,
                     )
                 else:  # sourcetable
@@ -397,7 +403,7 @@ class GNSSNTRIPClient:
 
         return 1
 
-    def _set_headers(self, settings: dict) -> str:
+    def _set_headers(self, settings: dict, gga_data: Queue) -> str:
         """
         Construct HTTP(S) GET request headers.
 
@@ -417,7 +423,13 @@ class GNSSNTRIPClient:
         if ggainterval == NOGGA:
             gga = ""
         else:
-            gga, _ = self._format_gga()
+            if gga_data is not None:
+                try:
+                    gga = gga_data.get(True)
+                except:
+                    gga, _ = self._format_gga()
+            else:
+                gga, _ = self._format_gga()
 
         cred = b64encode(f"{user}:{password}".encode()).decode()
         headers += f"Authorization: Basic {cred}\r\n"
@@ -484,6 +496,7 @@ class GNSSNTRIPClient:
         sock: socket,
         settings: dict,
         stopevent: Event,
+        gga_data: Queue,
         output: object,
     ):
         """
@@ -536,7 +549,7 @@ class GNSSNTRIPClient:
                         self.logger.info(f"Message received: {parsed_data.identity}")
                     self._do_output(output, raw_data, parsed_data)
                     last_activity = datetime.now()
-                self._send_gga(sock, settings["ggainterval"], output)
+                self._send_gga(sock, settings["ggainterval"], gga_data, output)
 
             except (
                 RTCMMessageError,
@@ -599,6 +612,7 @@ class GNSSNTRIPClient:
         """
 
         try:
+            # if 
             lat, lon, alt, sep, fixs, sip, hdop, diffage, diffstation = (
                 self._app_get_coordinates()
             )
@@ -627,7 +641,7 @@ class GNSSNTRIPClient:
         except ValueError:
             return None, None
 
-    def _send_gga(self, sock: socket, ggainterval: int, output: object):
+    def _send_gga(self, sock: socket, ggainterval: int, gga_data: Queue, output: object):
         """
         Send NMEA GGA sentence to NTRIP server at prescribed interval.
 
