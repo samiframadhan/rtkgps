@@ -13,7 +13,7 @@ It implements two threads which run concurrently:
 1) an I/O thread which continuously reads NMEA data from the
 receiver and sends any queued outbound command or poll messages.
 2) a process thread which processes parsed NMEA data - in this example
-it simply logger.infos the parsed data to the terminal.
+it simply prints the parsed data to the terminal.
 NMEA data is passed between threads using queues.
 
 Press CTRL-C to terminate.
@@ -45,7 +45,6 @@ from ntripclient import GNSSNTRIPClient
 
 logger = getLogger("rtkgps")
 set_logging(getLogger("ntripclient"), VERBOSITY_DEBUG)
-set_logging(getLogger("pynmeagps"), VERBOSITY_DEBUG)
 
 def io_data(
     stream: object,
@@ -82,7 +81,7 @@ def io_data(
                 sendqueue.task_done()
 
         except Exception as err:
-            logger.info(f"\n\nSomething went wrong {err}\n\n")
+            print(f"\n\nSomething went wrong {err}\n\n")
             continue
 
 
@@ -95,10 +94,10 @@ def process_data(gga_queue: Queue, data_queue: Queue, stop: Event):
     while not stop.is_set():
         if data_queue.empty() is False:
             (raw_data, parsed) = data_queue.get()
-            # logger.info(parsed)
+            # print(parsed)
             if parsed.msgID == "GGA":
                 fix = "3d" if parsed.quality == 1 else "2d"
-                logger.info(f"Fix : {parsed.quality}, Long :{parsed.lon}, Lat :{parsed.lat}")
+                print(f"Fix : {parsed.quality}, Long :{parsed.lon}, Lat :{parsed.lat}")
                 gga_queue.put((raw_data, parsed))
             data_queue.task_done()
 
@@ -161,31 +160,12 @@ def main(**kwargs):
             ),
         )
 
-        # ntrip(gga_queue, send_queue, kwargs)
+        ntrip(gga_queue, send_queue, kwargs)
 
-        logger.info("\nStarting handler threads. Press Ctrl-C to terminate...")
+        print("\nStarting handler threads. Press Ctrl-C to terminate...")
         io_thread.start()
         process_thread.start()
 
-        server = kwargs.get("server", "69.64.185.41")
-        port = int(kwargs.get("port", 7801))
-        mountpoint = kwargs.get("mountpoint", "MSM5")
-        user = kwargs.get("user", getenv("PYGPSCLIENT_USER", "grk28"))
-        password = kwargs.get("password", getenv("PYGPSCLIENT_PASSWORD", "730d2"))
-
-        gnc = GNSSNTRIPClient()
-        gnc.run(
-            server=server,
-            port=port,
-            https=0,
-            mountpoint=mountpoint,
-            datatype="RTCM",
-            ntripuser=user,
-            ntrippassword=password,
-            ggainterval=1,
-            gga_data=gga_queue,
-            output=send_queue,
-        )
         poll_str = ["GGA"]
 
         # loop until user presses Ctrl-C
@@ -196,7 +176,7 @@ def main(**kwargs):
                 # NB: Your receiver may not support all types. It will return a
                 # GNTXT "NMEA unknown msg" response for any types it doesn't support.
                 for msgid in poll_str:
-                    # logger.info(
+                    # print(
                     #     f"\nSending a GNQ message to poll for an {msgid} response...\n"
                     # )
                     msg = NMEAMessage("EI", "GNQ", POLL, msgId=msgid)
@@ -206,13 +186,13 @@ def main(**kwargs):
                 # stop_event.set()
 
             except KeyboardInterrupt:  # capture Ctrl-C
-                logger.info("\n\nTerminated by user.")
+                print("\n\nTerminated by user.")
                 stop_event.set()
 
-        logger.info("\nStop signal set. Waiting for threads to complete...")
+        print("\nStop signal set. Waiting for threads to complete...")
         io_thread.join()
         process_thread.join()
-        logger.info("\nProcessing complete")
+        print("\nProcessing complete")
 
 
 if __name__ == "__main__":
