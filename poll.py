@@ -130,7 +130,7 @@ def main(**kwargs):
             ),
         )
 
-        logger = getLogger("pygnssutils.gnssntripclient")
+        logger = getLogger("ntripclient")
         set_logging(logger, VERBOSITY_HIGH)
         server = kwargs.get("server", "69.64.185.41")
         port = int(kwargs.get("port", 7801))
