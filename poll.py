@@ -160,7 +160,27 @@ def main(**kwargs):
             ),
         )
 
-        ntrip(gga_queue, send_queue, kwargs)
+        server = kwargs.get("server", "69.64.185.41")
+        port = int(kwargs.get("port", 7801))
+        mountpoint = kwargs.get("mountpoint", "MSM5")
+        user = kwargs.get("user", getenv("PYGPSCLIENT_USER", "grk28"))
+        password = kwargs.get("password", getenv("PYGPSCLIENT_PASSWORD", "730d2"))
+
+        gnc = GNSSNTRIPClient()
+        gnc.run(
+            server=server,
+            port=port,
+            https=0,
+            mountpoint=mountpoint,
+            datatype="RTCM",
+            ntripuser=user,
+            ntrippassword=password,
+            ggainterval=1,
+            gga_data=gga_queue,
+            output=send_queue,
+        )
+
+        # ntrip(gga_queue, send_queue, kwargs)
 
         logger.info("\nStarting handler threads. Press Ctrl-C to terminate...")
         io_thread.start()
