@@ -94,7 +94,7 @@ def process_data(gga_queue: Queue, data_queue: Queue, stop: Event):
                 gga_queue.put((raw_data, parsed))
             data_queue.task_done()
 
-def ntrip(gga_queue: Queue, send_queue: Queue, **kwargs):
+def ntrip(gga_queue: Queue, send_queue: Queue, kwargs):
     logger = getLogger("pygnssutils")
     set_logging(logger, VERBOSITY_DEBUG)
     server = kwargs.get("server", "69.64.185.41")
