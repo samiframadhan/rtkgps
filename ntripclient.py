@@ -547,7 +547,7 @@ class GNSSNTRIPClient:
         while not stopevent.is_set():
             try:
                 raw_data, parsed_data = parser.read()
-                self.logger.info(type(parsed_data))
+                # self.logger.info(type(parsed_data))
                 if raw_data is None:
                     if datetime.now() - last_activity > timedelta(
                         seconds=self._timeout
