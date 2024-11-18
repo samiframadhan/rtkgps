@@ -70,7 +70,11 @@ def io_data(
             if not sendqueue.empty():
                 data = sendqueue.get(False)
                 if data is not None:
-                    nmr.datastream.write(data.serialize())
+                    if type(data) is tuple:
+                        raw, parsed = data
+                        nmr.datastream.write(raw)
+                    else:
+                        nmr.datastream.write(data.serialize())
                 sendqueue.task_done()
 
         except Exception as err:
