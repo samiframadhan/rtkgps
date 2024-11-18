@@ -161,6 +161,12 @@ def main(**kwargs):
             ),
         )
 
+        # ntrip(gga_queue, send_queue, kwargs)
+
+        logger.info("\nStarting handler threads. Press Ctrl-C to terminate...")
+        io_thread.start()
+        process_thread.start()
+
         server = kwargs.get("server", "69.64.185.41")
         port = int(kwargs.get("port", 7801))
         mountpoint = kwargs.get("mountpoint", "MSM5")
@@ -180,13 +186,6 @@ def main(**kwargs):
             gga_data=gga_queue,
             output=send_queue,
         )
-
-        # ntrip(gga_queue, send_queue, kwargs)
-
-        logger.info("\nStarting handler threads. Press Ctrl-C to terminate...")
-        io_thread.start()
-        process_thread.start()
-
         poll_str = ["GGA"]
 
         # loop until user presses Ctrl-C
