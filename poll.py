@@ -171,14 +171,14 @@ def main(**kwargs):
                 # NB: Your receiver may not support all types. It will return a
                 # GNTXT "NMEA unknown msg" response for any types it doesn't support.
                 for msgid in poll_str:
-                    print(
-                        f"\nSending a GNQ message to poll for an {msgid} response...\n"
-                    )
+                    # print(
+                    #     f"\nSending a GNQ message to poll for an {msgid} response...\n"
+                    # )
                     msg = NMEAMessage("EI", "GNQ", POLL, msgId=msgid)
                     send_queue.put(msg)
-                    sleep(1)
-                sleep(3)
-                stop_event.set()
+                    sleep(0.5)
+                # sleep(5)
+                # stop_event.set()
 
             except KeyboardInterrupt:  # capture Ctrl-C
                 print("\n\nTerminated by user.")
