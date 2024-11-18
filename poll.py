@@ -39,7 +39,7 @@ from logging import getLogger
 from serial import Serial
 
 from pynmeagps import NMEA_MSGIDS, POLL, NMEAMessage, NMEAReader
-from pygnssutils import VERBOSITY_HIGH, set_logging
+from pygnssutils import VERBOSITY_HIGH, VERBOSITY_DEBUG, set_logging
 
 from ntripclient import GNSSNTRIPClient
 
@@ -94,6 +94,31 @@ def process_data(gga_queue: Queue, data_queue: Queue, stop: Event):
                 gga_queue.put((raw_data, parsed))
             data_queue.task_done()
 
+def ntrip(gga_queue: Queue, send_queue: Queue, **kwargs):
+    logger = getLogger("pygnssutils")
+    set_logging(logger, VERBOSITY_DEBUG)
+    server = kwargs.get("server", "69.64.185.41")
+    port = int(kwargs.get("port", 7801))
+    mountpoint = kwargs.get("mountpoint", "MSM5")
+    user = kwargs.get("user", getenv("PYGPSCLIENT_USER", "grk28"))
+    password = kwargs.get("password", getenv("PYGPSCLIENT_PASSWORD", "730d2"))
+
+    gnc = GNSSNTRIPClient()
+    gnc.run(
+        server=server,
+        port=port,
+        https=0,
+        mountpoint=mountpoint,
+        datatype="RTCM",
+        ntripuser=user,
+        ntrippassword=password,
+        ggainterval=1,
+        gga_data=gga_queue,
+        output=send_queue,
+    )
+    
+    pass
+
 def main(**kwargs):
     """
     Main routine.
@@ -130,27 +155,7 @@ def main(**kwargs):
             ),
         )
 
-        logger = getLogger("ntripclient")
-        set_logging(logger, VERBOSITY_HIGH)
-        server = kwargs.get("server", "69.64.185.41")
-        port = int(kwargs.get("port", 7801))
-        mountpoint = kwargs.get("mountpoint", "MSM5")
-        user = kwargs.get("user", getenv("PYGPSCLIENT_USER", "grk28"))
-        password = kwargs.get("password", getenv("PYGPSCLIENT_PASSWORD", "730d2"))
-
-        gnc = GNSSNTRIPClient()
-        gnc.run(
-            server=server,
-            port=port,
-            https=0,
-            mountpoint=mountpoint,
-            datatype="RTCM",
-            ntripuser=user,
-            ntrippassword=password,
-            ggainterval=1,
-            gga_data=gga_queue,
-            output=send_queue,
-        )
+        ntrip(gga_queue, send_queue, kwargs)
 
         print("\nStarting handler threads. Press Ctrl-C to terminate...")
         io_thread.start()
