@@ -40,6 +40,7 @@ from serial import Serial
 
 from pynmeagps import NMEA_MSGIDS, POLL, NMEAMessage, NMEAReader
 from pygnssutils import VERBOSITY_HIGH, VERBOSITY_DEBUG, set_logging
+from pygnssutils.globals import CLIAPP
 
 from ntripclient import GNSSNTRIPClient
 
@@ -107,21 +108,19 @@ def ntrip(gga_queue: Queue, send_queue: Queue, kwargs):
     user = kwargs.get("user", getenv("PYGPSCLIENT_USER", "grk28"))
     password = kwargs.get("password", getenv("PYGPSCLIENT_PASSWORD", "730d2"))
 
-    gnc = GNSSNTRIPClient()
-    gnc.run(
-        server=server,
-        port=port,
-        https=0,
-        mountpoint=mountpoint,
-        datatype="RTCM",
-        ntripuser=user,
-        ntrippassword=password,
-        ggainterval=1,
-        gga_data=gga_queue,
-        output=send_queue,
-    )
-    
-    pass
+    with GNSSNTRIPClient(CLIAPP, kwargs=kwargs) as gnc:
+        gnc.run(
+            server=server,
+            port=port,
+            https=0,
+            mountpoint=mountpoint,
+            datatype="RTCM",
+            ntripuser=user,
+            ntrippassword=password,
+            ggainterval=1,
+            gga_data=gga_queue,
+            output=send_queue,
+        )
 
 def main(**kwargs):
     """
