@@ -45,6 +45,7 @@ from ntripclient import GNSSNTRIPClient
 
 logger = getLogger("rtkgps")
 set_logging(getLogger("ntripclient"), VERBOSITY_DEBUG)
+set_logging(getLogger("pynmeagps"), VERBOSITY_DEBUG)
 
 def io_data(
     stream: object,
