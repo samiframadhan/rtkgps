@@ -186,6 +186,7 @@ def main(**kwargs):
                     #     f"\nSending a GNQ message to poll for an {msgid} response...\n"
                     # )
                     msg = NMEAMessage("EI", "GNQ", POLL, msgId=msgid)
+                    logger.debug(f"NMEA Message sending...: {msg}")
                     send_queue.put(msg)
                     sleep(1)
                 sleep(2)
