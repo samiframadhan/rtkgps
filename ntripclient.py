@@ -723,7 +723,6 @@ class GNSSNTRIPClient:
             elif isinstance(output, TextIOWrapper):
                 output.write(str(parsed))
             elif isinstance(output, Queue):
-                self.logger.info(f"output from ntrip client: {parsed}")
                 output.put(raw if self.__app == CLIAPP else (raw, parsed))
             elif isinstance(output, socket.socket):
                 output.sendall(raw)
