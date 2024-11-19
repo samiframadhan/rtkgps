@@ -113,11 +113,11 @@ def process_data(gga_queue: Queue, data_queue: Queue, stop: Event):
             data_queue.task_done()
 
 def ntrip(gga_queue: Queue, send_queue: Queue, kwargs):
-    server = kwargs.get("server", "69.64.185.41")
-    port = int(kwargs.get("port", 7801))
-    mountpoint = kwargs.get("mountpoint", "MSM5")
-    user = kwargs.get("user", getenv("PYGPSCLIENT_USER", "grk28"))
-    password = kwargs.get("password", getenv("PYGPSCLIENT_PASSWORD", "730d2"))
+    server = kwargs.get("server", "rtk2go.com")
+    port = int(kwargs.get("port", 2101))
+    mountpoint = kwargs.get("mountpoint", "Litorinanranta2")
+    user = kwargs.get("user", getenv("PYGPSCLIENT_USER", "ntrip@samiframadhan.com"))
+    password = kwargs.get("password", getenv("PYGPSCLIENT_PASSWORD", "none"))
 
     gnc = GNSSNTRIPClient()
     gnc.run(
