@@ -102,10 +102,10 @@ def process_data(gga_queue: Queue, data_queue: Queue, stop: Event):
                 logger.info(f"MSGID: {parsed.msgID}. Long :{parsed.lon}, Lat :{parsed.lat}")
                 if hasattr(parsed, "alt"):
                     logger.info(f"Alt: {parsed.alt}")
-                if hasattr(parsed, "quality"):
-                    logger.info(f"Fix type: {parsed.quality}")
                 if parsed.msgID == "GGA":
                     gga_queue.put((raw_data, parsed))
+            if hasattr(parsed, "quality"):
+                logger.info(f"MSG ID: {parsed.msgID} Fix type: {parsed.quality}")
             if parsed.msgID == "TXT":
                 logger.info(f"TXT: {parsed.text}")
             data_queue.task_done()
@@ -183,7 +183,7 @@ def main(**kwargs):
                 # Poll for each NMEA sentence type.
                 # NB: Your receiver may not support all types. It will return a
                 # GNTXT "NMEA unknown msg" response for any types it doesn't support.
-                for msgid in poll_str:
+                for msgid in NMEA_MSGIDS:
                     # logger.info(
                     #     f"\nSending a GNQ message to poll for an {msgid} response...\n"
                     # )
