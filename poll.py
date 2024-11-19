@@ -106,8 +106,8 @@ def process_data(gga_queue: Queue, data_queue: Queue, stop: Event):
                     gga_queue.put((raw_data, parsed))
             if hasattr(parsed, "quality"):
                 logger.info(f"MSG ID: {parsed.msgID} Fix type: {parsed.quality}")
-            if hasattr(parsed, "numSV"):
-                logger.info(f"MSG ID: {parsed.msgID} Num SV: {parsed.numSV}")
+            if hasattr(parsed, "status"):
+                logger.info(f"MSG ID: {parsed.msgID} Fix type: {parsed.status}")
             if parsed.msgID == "TXT":
                 logger.info(f"TXT: {parsed.text}")
             data_queue.task_done()
