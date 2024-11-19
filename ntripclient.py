@@ -430,24 +430,11 @@ class GNSSNTRIPClient:
         if ggainterval == NOGGA:
             gga = ""
         else:
-            if gga_data is not None:
-                try:
-                    if not gga_data.empty():
-                        gga, _ = gga_data.get()
-                        gga_data.task_done()
-                        self._prev_gga = (gga, _)
-                        self.logger.info(f"gga data: {_}")
-                    else:
-                        if self._prev_gga is not None:
-                            gga, _ = self._prev_gga
-                        else:
-                            gga, _ = self._format_gga()
-
-                except:
-                    if self._prev_gga is not None:
-                            gga, _ = self._prev_gga
-                    else:
-                        gga, _ = self._format_gga()
+            if not gga_data.empty():
+                gga, _ = gga_data.get()
+                self._prev_gga = (gga, _)
+                self.logger.info(f"gga data: {_}")
+                gga_data.task_done()
             else:
                 if self._prev_gga is not None:
                     gga, _ = self._prev_gga
