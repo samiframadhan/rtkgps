@@ -181,13 +181,13 @@ def main(**kwargs):
                 # Poll for each NMEA sentence type.
                 # NB: Your receiver may not support all types. It will return a
                 # GNTXT "NMEA unknown msg" response for any types it doesn't support.
-                for msgid in NMEA_MSGIDS:
+                for msgid in poll_str:
                     # logger.info(
                     #     f"\nSending a GNQ message to poll for an {msgid} response...\n"
                     # )
                     msg = NMEAMessage("EI", "GNQ", POLL, msgId=msgid)
                     send_queue.put(msg)
-                    # sleep(0.5)
+                    sleep(2)
                 # sleep(5)
                 # stop_event.set()
 
