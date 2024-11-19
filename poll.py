@@ -47,6 +47,7 @@ logger = getLogger("rtkgps")
 set_logging(getLogger("ntripclient"), VERBOSITY_DEBUG)
 set_logging(getLogger("rtkgps"), VERBOSITY_DEBUG)
 poll_str = ["GGA", "GLL", "GNS", "LR2", "MOB", "RMA", "RMB", "RMC", "TRF", "WPL", "BWC", "BWR"]
+only_gga = ["GGA"]
 
 def io_data(
     stream: object,
@@ -178,13 +179,13 @@ def main(**kwargs):
                 # Poll for each NMEA sentence type.
                 # NB: Your receiver may not support all types. It will return a
                 # GNTXT "NMEA unknown msg" response for any types it doesn't support.
-                for msgid in poll_str:
+                for msgid in only_gga:
                     # logger.info(
                     #     f"\nSending a GNQ message to poll for an {msgid} response...\n"
                     # )
                     msg = NMEAMessage("EI", "GNQ", POLL, msgId=msgid)
                     send_queue.put(msg)
-                    sleep(0.5)
+                    # sleep(0.5)
                 # sleep(5)
                 # stop_event.set()
 
