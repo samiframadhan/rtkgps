@@ -104,10 +104,10 @@ def process_data(gga_queue: Queue, data_queue: Queue, stop: Event):
                     logger.info(f"Alt: {parsed.alt}")
                 if hasattr(parsed, "quality"):
                     logger.info(f"Fix type: {parsed.quality}")
-                if parsed.msgID == "TXT":
-                    logger.info(f"TXT: {parsed.text}")
                 if parsed.msgID == "GGA":
                     gga_queue.put((raw_data, parsed))
+            if parsed.msgID == "TXT":
+                logger.info(f"TXT: {parsed.text}")
             data_queue.task_done()
 
 def ntrip(gga_queue: Queue, send_queue: Queue, kwargs):
