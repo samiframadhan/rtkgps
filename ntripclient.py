@@ -66,6 +66,7 @@ from pygnssutils.globals import (
 )
 from pygnssutils.helpers import find_mp_distance, ipprot2int
 from pygnssutils.socketwrapper import SocketWrapper
+from time import sleep
 
 TIMEOUT = 3
 GGALIVE = 0
@@ -250,6 +251,10 @@ class GNSSNTRIPClient:
         while self._retrycount <= self._retries and not stopevent.is_set():
 
             try:
+                if self._first_request:
+                    while gga_data.empty():
+                        sleep(1)
+                    self._first_request = False
                 sock = self._open_connection(settings)
                 if not self._do_request(sock, settings, stopevent, gga_data, output):
                     # bad response or sourcetable, so quit
@@ -427,11 +432,7 @@ class GNSSNTRIPClient:
         else:
             if gga_data is not None:
                 try:
-                    if self._first_request:
-                        gga, _ = gga_data.get(True)
-                        self._first_request = False
-                        gga_data.task_done()
-                    elif not gga_data.empty():
+                    if not gga_data.empty():
                         gga, _ = gga_data.get()
                         gga_data.task_done()
                         self._prev_gga = (gga, _)
