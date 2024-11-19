@@ -78,6 +78,7 @@ def io_data(
                 if data is not None:
                     if type(data) is tuple:
                         raw, parsed = data
+                        logger.info(f"sending data: {raw}")
                         nmr.datastream.write(raw)
                     else:
                         nmr.datastream.write(data.serialize())
@@ -100,16 +101,10 @@ def process_data(gga_queue: Queue, data_queue: Queue, stop: Event):
             # logger.info(parsed)
             if hasattr(parsed, "lat") and hasattr(parsed, "lon"):
                 logger.info(f"MSGID: {parsed.msgID}. Long :{parsed.lon}, Lat :{parsed.lat}")
-                if hasattr(parsed, "alt"):
-                    logger.info(f"Alt: {parsed.alt}")
                 if parsed.msgID == "GGA":
                     gga_queue.put((raw_data, parsed))
-            if hasattr(parsed, "quality"):
-                logger.info(f"MSG ID: {parsed.msgID} Fix type: {parsed.quality}")
-            if hasattr(parsed, "status"):
-                logger.info(f"MSG ID: {parsed.msgID} Fix type: {parsed.status}")
-            if parsed.msgID == "TXT":
-                logger.info(f"TXT: {parsed.text}")
+                if hasattr(parsed, "quality"):
+                    logger.info(f"Fix type: {parsed.quality}")
             data_queue.task_done()
 
 def ntrip(gga_queue: Queue, send_queue: Queue, kwargs):
