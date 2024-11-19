@@ -134,7 +134,7 @@ def main(**kwargs):
     Main routine.
     """
 
-    port = kwargs.get("serport", "/dev/ttyS0")
+    port = kwargs.get("serport", "/dev/ttyUSB0")
     baudrate = int(kwargs.get("baudrate", 57600))
     timeout = float(kwargs.get("timeout", 1))
 
