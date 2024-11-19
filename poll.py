@@ -165,12 +165,11 @@ def main(**kwargs):
             ),
         )
 
-        ntrip(gga_queue, send_queue, kwargs)
-
         logger.info("\nStarting handler threads. Press Ctrl-C to terminate...")
         io_thread.start()
         process_thread.start()
 
+        ntrip(gga_queue, send_queue, kwargs)
 
         # loop until user presses Ctrl-C
         while not stop_event.is_set():
