@@ -252,6 +252,7 @@ class GNSSNTRIPClient:
 
             try:
                 if self._first_request:
+                    self.logger.info("waiting for 1st gga data")
                     while gga_data.empty():
                         sleep(1)
                     self._first_request = False
