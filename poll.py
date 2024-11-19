@@ -188,7 +188,7 @@ def main(**kwargs):
                     msg = NMEAMessage("EI", "GNQ", POLL, msgId=msgid)
                     send_queue.put(msg)
                     sleep(1)
-                sleep(8)
+                sleep(2)
                 # stop_event.set()
 
             except KeyboardInterrupt:  # capture Ctrl-C
