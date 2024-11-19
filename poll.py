@@ -102,6 +102,8 @@ def process_data(gga_queue: Queue, data_queue: Queue, stop: Event):
                 logger.info(f"MSGID: {parsed.msgID}. Long :{parsed.lon}, Lat :{parsed.lat}")
                 if hasattr(parsed, "alt"):
                     logger.info(f"Alt: {parsed.alt}")
+                if hasattr(parsed, "quality"):
+                    logger.info(f"Fix type: {parsed.quality}")
                 if parsed.msgID == "GGA":
                     gga_queue.put((raw_data, parsed))
             data_queue.task_done()
