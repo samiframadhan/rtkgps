@@ -78,7 +78,6 @@ def io_data(
                 if data is not None:
                     if type(data) is tuple:
                         raw, parsed = data
-                        logger.info(f"ntrip rtcm correction data: {parsed}")
                         nmr.datastream.write(raw)
                     else:
                         nmr.datastream.write(data.serialize())
@@ -184,7 +183,6 @@ def main(**kwargs):
                     #     f"\nSending a GNQ message to poll for an {msgid} response...\n"
                     # )
                     msg = NMEAMessage("EI", "GNQ", POLL, msgId=msgid)
-                    logger.debug(f"NMEA Message sending...: {msg}")
                     send_queue.put(msg)
                     sleep(1)
                 sleep(2)
