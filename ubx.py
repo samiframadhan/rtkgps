@@ -83,8 +83,7 @@ def process_data(queue: Queue, stop: Event):
     while not stop.is_set():
         if queue.empty() is False:
             (_, parsed) = queue.get()
-            if parsed.identity == "RXM-COR":
-                print(parsed)
+            print(parsed.identity)
             queue.task_done()
 
 
