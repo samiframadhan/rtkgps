@@ -38,6 +38,7 @@ from serial import Serial
 
 from pyubx2 import POLL, UBX_PAYLOADS_POLL, UBX_PROTOCOL, UBXMessage, UBXReader
 
+get_status = False
 
 def io_data(
     stream: object,
@@ -149,6 +150,7 @@ def main(**kwargs):
                         send_queue.put(msg)
                         count += 1
                         sleep(1)
+                sleep(10)
                 stop_event.set()
                 print(f"{count} NAV message types polled.")
 
