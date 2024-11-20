@@ -86,6 +86,8 @@ def process_data(queue: Queue, stop: Event):
             (_, parsed) = queue.get()
             if parsed.identity[0:4] == "NAV-":
                 print(f"{parsed.identity} : {parsed}")
+            if parsed.identity == "NAV-SAT":
+                print(f"RTCM Corrections used?: {parsed.rtcmCorrUsed}")
             print(parsed.identity)
             queue.task_done()
 
