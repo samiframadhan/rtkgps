@@ -78,6 +78,7 @@ def io_data(
                 if data is not None:
                     if type(data) is tuple:
                         raw, parsed = data
+                        logger.info(f"ntrip rtcm correction data: {parsed}")
                         nmr.datastream.write(raw)
                     else:
                         nmr.datastream.write(data.serialize())
