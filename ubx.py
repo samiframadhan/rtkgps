@@ -200,6 +200,7 @@ class GNSSSkeletonApp:
         if self.showhacc and hasattr(parsed_data, "hAcc"):  # UBX hAcc is in mm
             unit = 1 if parsed_data.identity == "PUBX00" else 1000
             print(f"Estimated horizontal accuracy: {(parsed_data.hAcc / unit):.3f} m")
+            print(type(parsed_data))
 
     def _send_data(self, stream: Serial, sendqueue: Queue):
         """
