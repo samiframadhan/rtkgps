@@ -85,6 +85,7 @@ def process_data(queue: Queue, stop: Event):
             (_, parsed) = queue.get()
             if parsed.identity[0:5] == "RXM-C":
                 print(f"{parsed.identity} : {parsed}")
+            print(parsed.identity)
             queue.task_done()
 
 
