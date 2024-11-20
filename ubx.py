@@ -151,7 +151,7 @@ def main(**kwargs):
                         count += 1
                         sleep(1)
                 sleep(10)
-                stop_event.set()
+                # stop_event.set()
                 print(f"{count} NAV message types polled.")
 
             except KeyboardInterrupt:  # capture Ctrl-C
