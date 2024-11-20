@@ -139,7 +139,7 @@ class GNSSSkeletonApp:
         """
 
         ubr = UBXReader(
-            stream, protfilter=(NMEA_PROTOCOL | UBX_PROTOCOL | RTCM3_PROTOCOL)
+            stream, protfilter=(UBX_PROTOCOL)
         )
         while not stopevent.is_set():
             try:
