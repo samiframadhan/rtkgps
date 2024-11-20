@@ -294,7 +294,7 @@ if __name__ == "__main__":
             float(args.timeout),
             stop_event,
             sendqueue=send_queue,
-            idonly=False,
+            idonly=True,
             enableubx=True,
             showhacc=True,
         ) as gna:
