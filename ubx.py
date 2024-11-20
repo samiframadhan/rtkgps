@@ -1,308 +1,159 @@
 """
-pygnssutils - gnssapp.py
+ubxpoller.py
 
-*** FOR ILLUSTRATION ONLY - NOT FOR PRODUCTION USE ***
+This example illustrates how to read, write and display UBX messages
+"concurrently" using threads and queues. This represents a useful
+generic pattern for many end user applications.
 
-Skeleton GNSS application which continuously receives, parses and prints
-NMEA, UBX or RTCM data from a receiver until the stop Event is set or
-stop() method invoked. Assumes receiver is connected via serial USB or UART1 port.
+Usage:
 
-The app also implements basic methods needed by certain pygnssutils classes.
+python3 ubxpoller.py port="/dev/ttyACM0" baudrate=38400 timeout=0.1
 
-Optional keyword arguments:
+It implements two threads which run concurrently:
+1) an I/O thread which continuously reads UBX data from the
+receiver and sends any queued outbound command or poll messages.
+2) a process thread which processes parsed UBX data - in this example
+it simply prints the parsed data to the terminal.
+UBX data is passed between threads using queues.
 
-- sendqueue - any data placed on this Queue will be sent to the receiver
-  (e.g. UBX commands/polls or NTRIP RTCM data). Data must be a tuple of 
-  (raw_data, parsed_data).
-- idonly - determines whether the app prints out the entire parsed message,
-  or just the message identity.
-- enableubx - suppresses NMEA receiver output and substitutes a minimum set
-  of UBX messages instead (NAV-PVT, NAV-SAT, NAV-DOP, RXM-RTCM).
-- showhacc - show estimate of horizonal accuracy in metres (if available).
+Press CTRL-C to terminate.
 
-Created on 27 Jul 2023
+FYI: Since Python implements a Global Interpreter Lock (GIL),
+threads are not strictly concurrent, though this is of minor
+practical consequence here.
+
+Created on 07 Aug 2021
 
 :author: semuadmin
-:copyright: SEMU Consulting © 2023
+:copyright: SEMU Consulting © 2021
 :license: BSD 3-Clause
 """
-# pylint: disable=invalid-name, too-many-instance-attributes
 
-from argparse import ArgumentDefaultsHelpFormatter, ArgumentParser
-from queue import Empty, Queue
+from queue import Queue
+from sys import argv
 from threading import Event, Thread
 from time import sleep
 
-from pynmeagps import NMEAMessageError, NMEAParseError
-from pyrtcm import RTCMMessage, RTCMMessageError, RTCMParseError
 from serial import Serial
 
-from pyubx2 import (
-    NMEA_PROTOCOL,
-    RTCM3_PROTOCOL,
-    UBX_PROTOCOL,
-    UBXMessage,
-    UBXMessageError,
-    UBXParseError,
-    UBXReader,
-)
-
-CONNECTED = 1
+from pyubx2 import POLL, UBX_PAYLOADS_POLL, UBX_PROTOCOL, UBXMessage, UBXReader
 
 
-class GNSSSkeletonApp:
+def io_data(
+    stream: object,
+    ubr: UBXReader,
+    readqueue: Queue,
+    sendqueue: Queue,
+    stop: Event,
+):
     """
-    Skeleton GNSS application which communicates with a GNSS receiver.
+    THREADED
+    Read and parse inbound UBX data and place
+    raw and parsed data on queue.
+
+    Send any queued outbound messages to receiver.
     """
+    # pylint: disable=broad-exception-caught
 
-    def __init__(
-        self, port: str, baudrate: int, timeout: float, stopevent: Event, **kwargs
-    ):
-        """
-        Constructor.
-
-        :param str port: serial port e.g. "/dev/ttyACM1"
-        :param int baudrate: baudrate
-        :param float timeout: serial timeout in seconds
-        :param Event stopevent: stop event
-        """
-
-        self.port = port
-        self.baudrate = baudrate
-        self.timeout = timeout
-        self.stopevent = stopevent
-        self.sendqueue = kwargs.get("sendqueue", None)
-        self.idonly = kwargs.get("idonly", True)
-        self.enableubx = kwargs.get("enableubx", False)
-        self.showhacc = kwargs.get("showhacc", False)
-        self.stream = None
-        self.lat = 0
-        self.lon = 0
-        self.alt = 0
-        self.sep = 0
-
-    def __enter__(self):
-        """
-        Context manager enter routine.
-        """
-
-        return self
-
-    def __exit__(self, exc_type, exc_value, exc_traceback):
-        """
-        Context manager exit routine.
-
-        Terminates app in an orderly fashion.
-        """
-
-        self.stop()
-
-    def run(self):
-        """
-        Run GNSS reader/writer.
-        """
-
-        self.enable_ubx(self.enableubx)
-
-        self.stream = Serial(self.port, self.baudrate, timeout=self.timeout)
-        self.stopevent.clear()
-
-        read_thread = Thread(
-            target=self._read_loop,
-            args=(
-                self.stream,
-                self.stopevent,
-                self.sendqueue,
-            ),
-            daemon=True,
-        )
-        read_thread.start()
-
-    def stop(self):
-        """
-        Stop GNSS reader/writer.
-        """
-
-        self.stopevent.set()
-        if self.stream is not None:
-            self.stream.close()
-
-    def _read_loop(self, stream: Serial, stopevent: Event, sendqueue: Queue):
-        """
-        THREADED
-        Reads and parses incoming GNSS data from the receiver,
-        and sends any queued output data to the receiver.
-
-        :param Serial stream: serial stream
-        :param Event stopevent: stop event
-        :param Queue sendqueue: queue for messages to send to receiver
-        """
-
-        ubr = UBXReader(
-            stream, protfilter=(UBX_PROTOCOL)
-        )
-        while not stopevent.is_set():
+    while not stop.is_set():
+        if stream.in_waiting:
             try:
-                if stream.in_waiting:
-                    _, parsed_data = ubr.read()
-                    if parsed_data:
-                        # extract current navigation solution
-                        self._extract_coordinates(parsed_data)
+                (raw_data, parsed_data) = ubr.read()
+                if parsed_data:
+                    readqueue.put((raw_data, parsed_data))
 
-                        # if it's an RXM-RTCM message, show which RTCM3 message
-                        # it's acknowledging and whether it's been used or not.""
-                        if parsed_data.identity == "RXM-RTCM":
-                            nty = (
-                                f" - {parsed_data.msgType} "
-                                f"{'Used' if parsed_data.msgUsed > 0 else 'Not used'}"
-                            )
-                        else:
-                            nty = ""
-
-                        if self.idonly:
-                            print(f"GNSS>> {parsed_data.identity}{nty}")
-                        else:
-                            print(parsed_data)
-
-                # send any queued output data to receiver
-                self._send_data(ubr.datastream, sendqueue)
-
-            except (
-                UBXMessageError,
-                UBXParseError,
-                NMEAMessageError,
-                NMEAParseError,
-                RTCMMessageError,
-                RTCMParseError,
-            ) as err:
-                print(f"Error parsing data stream {err}")
-                continue
-
-    def _extract_coordinates(self, parsed_data: object):
-        """
-        Extract current navigation solution from NMEA or UBX message.
-
-        :param object parsed_data: parsed NMEA or UBX navigation message
-        """
-
-        if hasattr(parsed_data, "lat"):
-            self.lat = parsed_data.lat
-        if hasattr(parsed_data, "lon"):
-            self.lon = parsed_data.lon
-        if hasattr(parsed_data, "alt"):
-            self.alt = parsed_data.alt
-        if hasattr(parsed_data, "hMSL"):  # UBX hMSL is in mm
-            self.alt = parsed_data.hMSL / 1000
-        if hasattr(parsed_data, "sep"):
-            self.sep = parsed_data.sep
-        if hasattr(parsed_data, "hMSL") and hasattr(parsed_data, "height"):
-            self.sep = (parsed_data.height - parsed_data.hMSL) / 1000
-        if self.showhacc and hasattr(parsed_data, "hAcc"):  # UBX hAcc is in mm
-            unit = 1 if parsed_data.identity == "PUBX00" else 1000
-            print(f"Estimated horizontal accuracy: {(parsed_data.hAcc / unit):.3f} m")
-            print(type(parsed_data))
-
-    def _send_data(self, stream: Serial, sendqueue: Queue):
-        """
-        Send any queued output data to receiver.
-        Queue data is tuple of (raw_data, parsed_data).
-
-        :param Serial stream: serial stream
-        :param Queue sendqueue: queue for messages to send to receiver
-        """
-
-        if sendqueue is not None:
-            try:
+                # refine this if outbound message rates exceed inbound
                 while not sendqueue.empty():
                     data = sendqueue.get(False)
-                    raw, parsed = data
-                    source = "NTRIP>>" if isinstance(parsed, RTCMMessage) else "GNSS<<"
-                    if self.idonly:
-                        print(f"{source} {parsed.identity}")
-                    else:
-                        print(parsed)
-                    stream.write(raw)
+                    if data is not None:
+                        ubr.datastream.write(data.serialize())
                     sendqueue.task_done()
-            except Empty:
-                pass
 
-    def enable_ubx(self, enable: bool):
-        """
-        Enable UBX output and suppress NMEA.
+            except Exception as err:
+                print(f"\n\nSomething went wrong {err}\n\n")
+                continue
 
-        :param bool enable: enable UBX and suppress NMEA output
-        """
 
-        layers = 1
-        transaction = 0
-        cfg_data = []
-        for port_type in ("USB", "UART1"):
-            cfg_data.append((f"CFG_{port_type}OUTPROT_NMEA", not enable))
-            cfg_data.append((f"CFG_{port_type}OUTPROT_UBX", enable))
-            cfg_data.append((f"CFG_MSGOUT_UBX_NAV_PVT_{port_type}", enable))
-            cfg_data.append((f"CFG_MSGOUT_UBX_NAV_SAT_{port_type}", enable * 4))
-            cfg_data.append((f"CFG_MSGOUT_UBX_NAV_DOP_{port_type}", enable * 4))
-            cfg_data.append((f"CFG_MSGOUT_UBX_RXM_RTCM_{port_type}", enable))
+def process_data(queue: Queue, stop: Event):
+    """
+    THREADED
+    Get UBX data from queue and display.
+    """
 
-        msg = UBXMessage.config_set(layers, transaction, cfg_data)
-        self.sendqueue.put((msg.serialize(), msg))
+    while not stop.is_set():
+        if queue.empty() is False:
+            (_, parsed) = queue.get()
+            print(parsed)
+            queue.task_done()
 
-    def get_coordinates(self) -> tuple:
-        """
-        Return current receiver navigation solution.
-        (method needed by certain pygnssutils classes)
 
-        :return: tuple of (connection status, lat, lon, alt and sep)
-        :rtype: tuple
-        """
+def main(**kwargs):
+    """
+    Main routine.
+    """
 
-        return (CONNECTED, self.lat, self.lon, self.alt, self.sep)
+    port = kwargs.get("port", "/dev/ttyACM0")
+    baudrate = int(kwargs.get("baudrate", 38400))
+    timeout = float(kwargs.get("timeout", 0.1))
 
-    def set_event(self, eventtype: str):
-        """
-        Create event.
-        (stub method needed by certain pygnssutils classes)
+    with Serial(port, baudrate, timeout=timeout) as stream:
+        ubxreader = UBXReader(stream, protfilter=UBX_PROTOCOL)
 
-        :param str eventtype: name of event to create
-        """
+        read_queue = Queue()
+        send_queue = Queue()
+        stop_event = Event()
+        stop_event.clear()
 
-        # create event of specified eventtype
+        io_thread = Thread(
+            target=io_data,
+            args=(
+                stream,
+                ubxreader,
+                read_queue,
+                send_queue,
+                stop_event,
+            ),
+        )
+        process_thread = Thread(
+            target=process_data,
+            args=(
+                read_queue,
+                stop_event,
+            ),
+        )
+
+        print("\nStarting handler threads. Press Ctrl-C to terminate...")
+        io_thread.start()
+        process_thread.start()
+
+        # loop until user presses Ctrl-C
+        while not stop_event.is_set():
+            try:
+                # DO STUFF IN THE BACKGROUND...
+                # poll all available NAV messages (receiver will only respond
+                # to those NAV message types it supports; responses won't
+                # necessarily arrive in sequence)
+                count = 0
+                for nam in UBX_PAYLOADS_POLL:
+                    if nam[0:4] == "NAV-":
+                        print(f"Polling {nam} message type...")
+                        msg = UBXMessage("NAV", nam, POLL)
+                        send_queue.put(msg)
+                        count += 1
+                        sleep(1)
+                stop_event.set()
+                print(f"{count} NAV message types polled.")
+
+            except KeyboardInterrupt:  # capture Ctrl-C
+                print("\n\nTerminated by user.")
+                stop_event.set()
+
+        print("\nStop signal set. Waiting for threads to complete...")
+        io_thread.join()
+        process_thread.join()
+        print("\nProcessing complete")
 
 
 if __name__ == "__main__":
-    arp = ArgumentParser(
-        formatter_class=ArgumentDefaultsHelpFormatter,
-    )
-    arp.add_argument(
-        "-P", "--port", required=False, help="Serial port", default="/dev/ttyACM1"
-    )
-    arp.add_argument(
-        "-B", "--baudrate", required=False, help="Baud rate", default=38400, type=int
-    )
-    arp.add_argument(
-        "-T", "--timeout", required=False, help="Timeout in secs", default=3, type=float
-    )
 
-    args = arp.parse_args()
-    send_queue = Queue()
-    stop_event = Event()
-
-    try:
-        print("Starting GNSS reader/writer...\n")
-        with GNSSSkeletonApp(
-            args.port,
-            int(args.baudrate),
-            float(args.timeout),
-            stop_event,
-            sendqueue=send_queue,
-            idonly=True,
-            enableubx=True,
-            showhacc=True,
-        ) as gna:
-            gna.run()
-            while True:
-                sleep(1)
-
-    except KeyboardInterrupt:
-        stop_event.set()
-        print("Terminated by user")
+    main(**dict(arg.split("=") for arg in argv[1:]))
