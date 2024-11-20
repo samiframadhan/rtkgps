@@ -135,9 +135,15 @@ def main(**kwargs):
                 # necessarily arrive in sequence)
                 count = 0
                 for nam in UBX_PAYLOADS_POLL:
-                    if nam[0:4] == "NAV-":
+                    # if nam[0:4] == "NAV-":
+                    #     print(f"Polling {nam} message type...")
+                    #     msg = UBXMessage("NAV", nam, POLL)
+                    #     send_queue.put(msg)
+                    #     count += 1
+                    #     sleep(1)
+                    if nam[0:4] == "RXM-":
                         print(f"Polling {nam} message type...")
-                        msg = UBXMessage("NAV", nam, POLL)
+                        msg = UBXMessage("RXM", nam, POLL)
                         send_queue.put(msg)
                         count += 1
                         sleep(1)
