@@ -160,6 +160,10 @@ def broadcast(tcp_server: TCPServer, gps_data_queue: Queue, ntrip_client: GNSSNT
         if not gps_data_queue.empty():
             connect = "ON" if ntrip_client.connected == True else "OFF"
             lat, long, height, fix, PDOP, HDOP, VDOP = gps_data_queue.get()
+            lis = [lat, long, height, fix, PDOP, HDOP, VDOP]
+            for val in lis:
+                if len(val) == 0:
+                    print(val)
             if fix == 1:
                 fixtype = "GPS"
             elif fix == 2:
