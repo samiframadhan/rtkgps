@@ -152,6 +152,12 @@ def main(**kwargs):
                         send_queue.put(msg)
                         count += 1
                         sleep(1)
+                    if nam[0:4] == "MON-":
+                        print(f"Polling {nam} message type...")
+                        msg = UBXMessage("MON", nam, POLL)
+                        send_queue.put(msg)
+                        count += 1
+                        sleep(1)
                 # stop_event.set()
                 print(f"{count} NAV message types polled.")
                 while count is not 0:
