@@ -111,7 +111,7 @@ def process_data(gga_queue: Queue, data_queue: Queue, gps_queue: Queue, stop: Ev
             if hasattr(parsed, "lat") and hasattr(parsed, "lon"):
                 logger.info(f"MSGID: {parsed.msgID}. Long :{parsed.lon}, Lat :{parsed.lat}")
                 lat.append(parsed.lat)
-                long.append(parsed.long)
+                long.append(parsed.lon)
                 if parsed.msgID == "GGA":
                     logger.info(f"Fix type: {parsed.quality}")
                     fix.append(parsed.quality)
