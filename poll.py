@@ -152,7 +152,7 @@ def ntrip(gga_queue: Queue, send_queue: Queue, kwargs):
 
 def broadcast(tcp_server: TCPServer, gps_data_queue: Queue, ntrip_client: GNSSNTRIPClient, stop: Event):
     while not stop.is_set():
-        if gps_data_queue.not_empty():
+        if not gps_data_queue.empty():
             fixtype = ""
             connect = "ON" if ntrip_client.connected == True else "OFF"
             lat, long, height, fix, PDOP, HDOP, VDOP = gps_data_queue.get()
