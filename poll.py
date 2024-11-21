@@ -211,6 +211,7 @@ def main(**kwargs):
             args=(
                 gga_queue,
                 read_queue,
+                gps_queue,
                 stop_event,
             ),
         )
