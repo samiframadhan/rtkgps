@@ -124,6 +124,7 @@ def process_data(gga_queue: Queue, data_queue: Queue, gps_queue: Queue, stop: Ev
                 VDOP.append(parsed.VDOP)
             data_queue.task_done()
         count = 0
+        lat.
         if len(lat) == 0:
             count = 1
         if len(long) == 0:
@@ -172,26 +173,29 @@ def broadcast(tcp_server: TCPServer, gps_data_queue: Queue, ntrip_client: GNSSNT
             connect = "ON" if ntrip_client.connected == True else "OFF"
             lat, long, height, fix, PDOP, HDOP, VDOP = gps_data_queue.get()
             lis = [lat, long, height, fix, PDOP, HDOP, VDOP]
+            count = 0
             for val in lis:
                 if len(val) == 0:
-                    print(val)
-            type = fix.pop()
-            if type == 1:
-                fixtype = "GPS"
-            elif type == 2:
-                fixtype = "DGPS"
-            elif type == 3:
-                fixtype = "3D"
-            elif type == 4:
-                fixtype = "FIX"
-            elif type == 5:
-                fixtype = "Float"
-            else:
-                fixtype = str(fix)
-            message = f"{lat.pop()},{long.pop()},{height.pop()},{fixtype},{PDOP.pop()},{HDOP.pop()},{VDOP.pop()},{connect}"
-            logger.info(f"Broadcasting to tcp clients: {message}")
-            tcp_server.broadcast(message=message)
-            gps_data_queue.task_done()
+                    count = 1
+
+            if count == 0:
+                type = fix.pop()
+                if type == 1:
+                    fixtype = "GPS"
+                elif type == 2:
+                    fixtype = "DGPS"
+                elif type == 3:
+                    fixtype = "3D"
+                elif type == 4:
+                    fixtype = "FIX"
+                elif type == 5:
+                    fixtype = "Float"
+                else:
+                    fixtype = str(fix)
+                message = f"{lat.pop()},{long.pop()},{height.pop()},{fixtype},{PDOP.pop()},{HDOP.pop()},{VDOP.pop()},{connect}"
+                logger.info(f"Broadcasting to tcp clients: {message}")
+                tcp_server.broadcast(message=message)
+                gps_data_queue.task_done()
             
 
 def main(**kwargs):
