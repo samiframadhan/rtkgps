@@ -44,7 +44,7 @@ from pygnssutils import VERBOSITY_HIGH, VERBOSITY_DEBUG, set_logging
 from ntripclient import GNSSNTRIPClient
 
 logger = getLogger("rtkgps")
-set_logging(getLogger("ntripclient"), VERBOSITY_HIGH)
+# set_logging(getLogger("ntripclient"), VERBOSITY_HIGH)
 set_logging(getLogger("rtkgps"), VERBOSITY_HIGH)
 poll_str = ["GGA", "GLL", "GNS", "LR2", "MOB", "RMA", "RMB", "RMC", "TRF", "WPL", "BWC", "BWR"]
 only_gga = ["GGA"]
