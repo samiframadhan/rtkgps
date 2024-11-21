@@ -175,15 +175,16 @@ def broadcast(tcp_server: TCPServer, gps_data_queue: Queue, ntrip_client: GNSSNT
             for val in lis:
                 if len(val) == 0:
                     print(val)
-            if fix == 1:
+            type = fix.pop()
+            if type == 1:
                 fixtype = "GPS"
-            elif fix == 2:
+            elif type == 2:
                 fixtype = "DGPS"
-            elif fix == 3:
+            elif type == 3:
                 fixtype = "3D"
-            elif fix == 4:
+            elif type == 4:
                 fixtype = "FIX"
-            elif fix == 5:
+            elif type == 5:
                 fixtype = "Float"
             else:
                 fixtype = str(fix)
