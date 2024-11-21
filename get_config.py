@@ -191,7 +191,7 @@ def main(**kwargs):
                     ]
                 msg = UBXMessage.config_poll(layer, position, configs)
                 send_queue.put(msg)
-                sleep(1)
+                sleep(10)
                 print(f"Sending msgs: {configs}")
                 stop_event.set()
                 # print(f"{count} NAV message types polled.")
