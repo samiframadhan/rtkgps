@@ -94,6 +94,7 @@ def process_data(queue: Queue, stop: Event):
         if queue.empty() is False:
             (_, parsed) = queue.get()
             # TODO
+            print(f"Parsed: {parsed}")
             queue.task_done()
 
 
@@ -190,7 +191,8 @@ def main(**kwargs):
                     ]
                 msg = UBXMessage.config_poll(layer, position, configs)
                 send_queue.put(msg)
-                sleep(100)
+                sleep(1)
+                print(f"Sending msgs: {configs}")
                 stop_event.set()
                 # print(f"{count} NAV message types polled.")
 
