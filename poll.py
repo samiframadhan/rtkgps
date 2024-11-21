@@ -185,6 +185,8 @@ def broadcast(tcp_server: TCPServer, gps_data_queue: Queue, ntrip_client: GNSSNT
                 fixtype = "FIX"
             elif fix == 5:
                 fixtype = "Float"
+            else:
+                fixtype = str(fix)
             message = f"{lat.pop()},{long.pop()},{height.pop()},{fixtype},{PDOP.pop()},{HDOP.pop()},{VDOP.pop()},{connect}"
             logger.info(f"Broadcasting to tcp clients: {message}")
             tcp_server.broadcast(message=message)
