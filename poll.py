@@ -35,6 +35,7 @@ from os import getenv
 from threading import Event, Thread
 from time import sleep
 from logging import getLogger
+from collections import deque
 
 from serial import Serial
 
@@ -42,6 +43,7 @@ from pynmeagps import NMEA_MSGIDS, POLL, NMEAMessage, NMEAReader
 from pygnssutils import VERBOSITY_HIGH, VERBOSITY_DEBUG, set_logging
 
 from ntripclient import GNSSNTRIPClient
+from tcp import TCPServer
 
 logger = getLogger("rtkgps")
 # set_logging(getLogger("ntripclient"), VERBOSITY_HIGH)
@@ -88,11 +90,19 @@ def io_data(
             continue
 
 
-def process_data(gga_queue: Queue, data_queue: Queue, stop: Event):
+def process_data(gga_queue: Queue, data_queue: Queue, gps_queue: Queue, stop: Event):
     """
     THREADED
     Get NMEA data from data_queue and display.
     """
+
+    lat = deque(maxlen=1)
+    long = deque(maxlen=1)
+    height = deque(maxlen=1)
+    fix = deque(maxlen=1)
+    PDOP = deque(maxlen=1)
+    HDOP = deque(maxlen=1)
+    VDOP = deque(maxlen=1)
 
     while not stop.is_set():
         if data_queue.empty() is False:
@@ -100,11 +110,22 @@ def process_data(gga_queue: Queue, data_queue: Queue, stop: Event):
             # logger.info(parsed)
             if hasattr(parsed, "lat") and hasattr(parsed, "lon"):
                 logger.info(f"MSGID: {parsed.msgID}. Long :{parsed.lon}, Lat :{parsed.lat}")
+                lat.append(parsed.lat)
+                long.append(parsed.long)
                 if parsed.msgID == "GGA":
-                    gga_queue.put((raw_data, parsed))
-                if hasattr(parsed, "quality"):
                     logger.info(f"Fix type: {parsed.quality}")
+                    fix.append(parsed.quality)
+                    height.append(parsed.alt)
+                    gga_queue.put((raw_data, parsed))
+            if parsed.msgID == "GSA":
+                PDOP.append(parsed.PDOP)
+                HDOP.append(parsed.HDOP)
+                VDOP.append(parsed.VDOP)
             data_queue.task_done()
+        if lat.count() == 1 and long.count() == 1 and height.count() == 1 and fix.count() == 1 and HDOP.count() == 1 and VDOP.count() == 1 and PDOP.count() == 1:
+            gps_queue.put((lat, long, height, fix, PDOP, HDOP, VDOP))
+            pass
+                
 
 def ntrip(gga_queue: Queue, send_queue: Queue, kwargs):
     server = kwargs.get("server", "69.64.185.41")
@@ -127,7 +148,28 @@ def ntrip(gga_queue: Queue, send_queue: Queue, kwargs):
         output=send_queue,
     )
     
-    pass
+    return gnc
+
+def broadcast(tcp_server: TCPServer, gps_data_queue: Queue, ntrip_client: GNSSNTRIPClient, stop: Event):
+    while not stop.is_set():
+        if gps_data_queue.not_empty():
+            fixtype = ""
+            connect = "ON" if ntrip_client.connected == True else "OFF"
+            lat, long, height, fix, PDOP, HDOP, VDOP = gps_data_queue.get()
+            if fix == 1:
+                fixtype = "GPS"
+            elif fix == 2:
+                fixtype = "DGPS"
+            elif fix == 3:
+                fixtype = "3D"
+            elif fix == 4:
+                fixtype = "FIX"
+            elif fix == 5:
+                fixtype = "Float"
+            message = f"{lat},{long},{height},{fixtype},{PDOP},{HDOP},{VDOP},{connect}"
+            logger.info(f"Broadcasting to tcp clients: {message}")
+            tcp_server.broadcast(message=message)
+            
 
 def main(**kwargs):
     """
@@ -143,8 +185,15 @@ def main(**kwargs):
 
         read_queue = Queue()
         gga_queue = Queue()
+        gps_queue = Queue()
         send_queue = Queue()
         stop_event = Event()
+
+        tcp_server = TCPServer(port=5051)
+
+        server_thread = Thread(target=tcp_server.start)
+        server_thread.daemon = True
+        server_thread.start()
 
         io_thread = Thread(
             target=io_data,
@@ -156,6 +205,7 @@ def main(**kwargs):
                 stop_event,
             ),
         )
+
         process_thread = Thread(
             target=process_data,
             args=(
@@ -169,7 +219,18 @@ def main(**kwargs):
         io_thread.start()
         process_thread.start()
 
-        ntrip(gga_queue, send_queue, kwargs)
+        ntrip_client = ntrip(gga_queue, send_queue, kwargs)
+
+        broadcast_thread = Thread(
+            target=broadcast,
+            args=(
+                tcp_server,
+                gps_queue,
+                ntrip_client,
+                stop_event
+            )
+        )
+        broadcast_thread.start()
 
         # loop until user presses Ctrl-C
         while not stop_event.is_set():
