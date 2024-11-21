@@ -187,7 +187,9 @@ def main(**kwargs):
                         "CFG_UART1INPROT_RTCM3X",
                         "CFG_UART1OUTPROT_RTCM3X",
                         "CFG_UART2INPROT_RTCM3X",
-                        "CFG_UART2OUTPROT_RTCM3X"
+                        "CFG_UART2OUTPROT_RTCM3X",
+                        "CFG-MSGOUT-UBX_RXM_COR_UART1",
+                        "CFG-MSGOUT-UBX_RXM_COR_UART2",
                     ]
                 msg = UBXMessage.config_poll(layer, position, configs)
                 send_queue.put(msg)

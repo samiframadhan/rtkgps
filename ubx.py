@@ -146,15 +146,18 @@ def main(**kwargs):
                         send_queue.put(msg)
                         count += 1
                         sleep(1)
-                    # if nam[0:4] == "RXM-":
-                    #     print(f"Polling {nam} message type...")
-                    #     msg = UBXMessage("RXM", nam, POLL)
-                    #     send_queue.put(msg)
-                    #     count += 1
-                    #     sleep(1)
-                sleep(10)
+                    if nam[0:4] == "RXM-":
+                        print(f"Polling {nam} message type...")
+                        msg = UBXMessage("RXM", nam, POLL)
+                        send_queue.put(msg)
+                        count += 1
+                        sleep(1)
                 # stop_event.set()
                 print(f"{count} NAV message types polled.")
+                while count is not 0:
+                    sleep(5)
+                    print("Waiting for the incoming messages...")
+                    count -= 1
 
             except KeyboardInterrupt:  # capture Ctrl-C
                 print("\n\nTerminated by user.")
