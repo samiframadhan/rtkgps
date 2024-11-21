@@ -103,6 +103,7 @@ def process_data(gga_queue: Queue, data_queue: Queue, gps_queue: Queue, stop: Ev
     PDOP = deque(maxlen=1)
     HDOP = deque(maxlen=1)
     VDOP = deque(maxlen=1)
+    deq = [lat, long, height, fix, PDOP, HDOP, VDOP]
 
     while not stop.is_set():
         if data_queue.empty() is False:
@@ -122,17 +123,13 @@ def process_data(gga_queue: Queue, data_queue: Queue, gps_queue: Queue, stop: Ev
                 HDOP.append(parsed.HDOP)
                 VDOP.append(parsed.VDOP)
             data_queue.task_done()
+        count = 0
+        for val in deq:
+            if len(val) == 0:
+                count = 1
         
-        if len(lat) == 1 and len(long) == 1 and len(height) == 1 and len(fix) == 1 and len(HDOP) == 1 and len(VDOP) == 1 and len(PDOP) == 1:
+        if count == 1:
             gps_queue.put((lat, long, height, fix, PDOP, HDOP, VDOP))
-            lat.clear()
-            long.clear()
-            height.clear()
-            fix.clear()
-            HDOP.clear()
-            VDOP.clear()
-            PDOP.clear()
-            pass
                 
 
 def ntrip(gga_queue: Queue, send_queue: Queue, kwargs):
