@@ -128,7 +128,7 @@ def process_data(gga_queue: Queue, data_queue: Queue, gps_queue: Queue, stop: Ev
             if len(val) == 0:
                 count = 1
         
-        if count == 1:
+        if count == 0:
             gps_queue.put((lat, long, height, fix, PDOP, HDOP, VDOP))
                 
 
