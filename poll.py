@@ -125,6 +125,13 @@ def process_data(gga_queue: Queue, data_queue: Queue, gps_queue: Queue, stop: Ev
         
         if len(lat) == 1 and len(long) == 1 and len(height) == 1 and len(fix) == 1 and len(HDOP) == 1 and len(VDOP) == 1 and len(PDOP) == 1:
             gps_queue.put((lat, long, height, fix, PDOP, HDOP, VDOP))
+            lat.clear()
+            long.clear()
+            height.clear()
+            fix.clear()
+            HDOP.clear()
+            VDOP.clear()
+            PDOP.clear()
             pass
                 
 
