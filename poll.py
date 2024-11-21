@@ -124,9 +124,20 @@ def process_data(gga_queue: Queue, data_queue: Queue, gps_queue: Queue, stop: Ev
                 VDOP.append(parsed.VDOP)
             data_queue.task_done()
         count = 0
-        for val in deq:
-            if len(val) == 0:
-                count = 1
+        if len(lat) == 0:
+            count = 1
+        if len(long) == 0:
+            count = 1
+        if len(height) == 0:
+            count = 1
+        if len(fix) == 0:
+            count = 1
+        if len(PDOP) == 0:
+            count = 1
+        if len(HDOP) == 0:
+            count = 1
+        if len(VDOP) == 0:
+            count = 1
         
         if count == 0:
             gps_queue.put((lat, long, height, fix, PDOP, HDOP, VDOP))
