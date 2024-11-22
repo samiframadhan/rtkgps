@@ -205,7 +205,7 @@ def main(**kwargs):
         send_queue = Queue()
         stop_event = Event()
 
-        tcp_server = TCPServer(port=5051)
+        tcp_server = TCPServer(host="0.0.0.0",port=5051)
 
         server_thread = Thread(target=tcp_server.start)
         server_thread.daemon = True
