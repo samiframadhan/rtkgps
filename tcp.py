@@ -2,7 +2,7 @@ import socket
 import threading
 from logging import getLogger
 from queue import Queue
-from pynmeagps import set_logging
+from pygnssutils import set_logging
 
 class TCPServer:
     def __init__(self, host='127.0.0.1', port=65432, stop= None):
