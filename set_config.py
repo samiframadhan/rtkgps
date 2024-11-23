@@ -161,8 +161,8 @@ def main(**kwargs):
                 layer = POLL_LAYER_RAM  # volatile memory
                 configs = [
                         "CFG_RATE_MEAS",
-                        "CFG_RATE_NAV_PRIO",
                         "CFG_RATE_NAV",
+                        # "CFG_RATE_NAV_PRIO",
                     ]
                 msg = UBXMessage.config_poll(layer, position, configs)
                 print(f"Polling data...")
