@@ -176,6 +176,7 @@ def main(**kwargs):
                 send_queue.put(msg)
                 sleep(10)
 
+                layer = POLL_LAYER_RAM
                 msg = UBXMessage.config_poll(layer, position, configs)
                 print(f"Polling data...")
                 send_queue.put(msg)
@@ -197,7 +198,6 @@ def main(**kwargs):
                 #     ]
                 # msg = UBXMessage.config_poll(layer, position, configs)
                 # send_queue.put(msg)
-                sleep(100)
                 stop_event.set()
                 # print(f"{count} NAV message types polled.")
 
