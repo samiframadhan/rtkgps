@@ -94,6 +94,7 @@ def process_data(queue: Queue, stop: Event):
     while not stop.is_set():
         if queue.empty() is False:
             (_, parsed) = queue.get()
+            print(parsed)
             # TODO
             queue.task_done()
 
