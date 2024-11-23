@@ -173,7 +173,7 @@ def main(**kwargs):
                 cnfg_data = [
                     ("CFG_RATE_MEAS", 100),
                     ("CFG_RATE_NAV", 2),
-                    ("CFG_RATE_NAV_PRIO", 2),
+                    # ("CFG_RATE_NAV_PRIO", 2),
                     ]
                 msg = UBXMessage.config_set(layer, transaction=0, cfgData=cnfg_data)
                 print(f"Setting data...")
@@ -182,8 +182,8 @@ def main(**kwargs):
 
                 configs = [
                         "CFG_RATE_MEAS",
-                        "CFG_RATE_NAV_PRIO",
                         "CFG_RATE_NAV",
+                        # "CFG_RATE_NAV_PRIO",
                     ]
                 layer = POLL_LAYER_RAM
                 msg = UBXMessage.config_poll(layer, position, configs)
