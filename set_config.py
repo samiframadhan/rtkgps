@@ -171,7 +171,7 @@ def main(**kwargs):
 
                 layer = SET_LAYER_RAM
                 cnfg_data = [
-                    ("CFG_RATE_MEAS", 100),
+                    ("CFG_RATE_MEAS", 200),
                     ("CFG_RATE_NAV", 1),
                     # ("CFG_RATE_NAV_PRIO", 2),
                     ]
