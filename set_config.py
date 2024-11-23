@@ -40,6 +40,7 @@ from pyubx2 import (
     POLL_LAYER_BBR,
     POLL_LAYER_RAM,
     SET_LAYER_BBR,
+    SET_LAYER_RAM,
     UBX_CONFIG_DATABASE,
     POLL, 
     UBX_PAYLOADS_POLL, 
@@ -168,7 +169,8 @@ def main(**kwargs):
                 send_queue.put(msg)
                 sleep(10)
 
-                cnfg_data = [("CFG_RATE_MEAS", 200)]
+                layer = SET_LAYER_RAM
+                cnfg_data = [("CFG_RATE_MEAS", 300)]
                 msg = UBXMessage.config_set(layer, transaction=0, cfgData=cnfg_data)
                 print(f"Setting data...")
                 send_queue.put(msg)
