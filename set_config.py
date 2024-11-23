@@ -160,7 +160,7 @@ def main(**kwargs):
                 position = 0
                 layer = POLL_LAYER_RAM  # volatile memory
                 configs = [
-                        "CFG_RATE_MEAS",
+                        "CFG_MSGOUT_NMEA_ID_GGA_USB",
                         # "CFG_RATE_NAV_PRIO",
                         # "CFG_RATE_NAV",
                     ]
@@ -170,7 +170,7 @@ def main(**kwargs):
                 sleep(10)
 
                 layer = SET_LAYER_RAM
-                cnfg_data = [("CFG_RATE_MEAS", 300)]
+                cnfg_data = [("CFG_MSGOUT_NMEA_ID_GGA_USB", 2)]
                 msg = UBXMessage.config_set(layer, transaction=0, cfgData=cnfg_data)
                 print(f"Setting data...")
                 send_queue.put(msg)
