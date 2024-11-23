@@ -182,6 +182,8 @@ def main(**kwargs):
                         "CFG_NAVHPG_DGNSSMODE",
                         "CFG_NAVSPG_DYNMODEL",
                         "CFG_RATE_MEAS",
+                        "CFG_RATE_NAV",
+                        "CFG_RATE_NAV_PRIO",
                         "CFG_RTCM_DF003_IN",
                         "CFG_RTCM_DF003_IN_FILTER",
                         "CFG_UART1INPROT_RTCM3X",
