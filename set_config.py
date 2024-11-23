@@ -170,7 +170,7 @@ def main(**kwargs):
                 sleep(10)
 
                 layer = SET_LAYER_RAM
-                cnfg_data = [("CFG_MSGOUT_NMEA_ID_GGA_USB", 2)]
+                cnfg_data = [("CFG_MSGOUT_NMEA_ID_GGA_USB", 1)]
                 msg = UBXMessage.config_set(layer, transaction=0, cfgData=cnfg_data)
                 print(f"Setting data...")
                 send_queue.put(msg)
