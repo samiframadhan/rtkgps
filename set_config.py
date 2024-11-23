@@ -160,8 +160,8 @@ def main(**kwargs):
                 position = 0
                 layer = POLL_LAYER_RAM  # volatile memory
                 configs = [
-                        "CFG_RATE_MEAS",
-                        "CFG_RATE_NAV",
+                        "CFG_MSGOUT_NMEA_ID_GSV_USB",
+                        # "CFG_RATE_NAV",
                         # "CFG_RATE_NAV_PRIO",
                     ]
                 msg = UBXMessage.config_poll(layer, position, configs)
@@ -171,8 +171,8 @@ def main(**kwargs):
 
                 layer = SET_LAYER_RAM
                 cnfg_data = [
-                    ("CFG_RATE_MEAS", 200),
-                    ("CFG_RATE_NAV", 1),
+                    ("CFG_MSGOUT_NMEA_ID_GSV_USB", 0),
+                    # ("CFG_RATE_NAV", 1),
                     # ("CFG_RATE_NAV_PRIO", 2),
                     ]
                 msg = UBXMessage.config_set(layer, transaction=0, cfgData=cnfg_data)
@@ -181,8 +181,8 @@ def main(**kwargs):
                 sleep(10)
 
                 configs = [
-                        "CFG_RATE_MEAS",
-                        "CFG_RATE_NAV",
+                        "CFG_MSGOUT_NMEA_ID_GSV_USB",
+                        # "CFG_RATE_NAV",
                         # "CFG_RATE_NAV_PRIO",
                     ]
                 layer = POLL_LAYER_RAM
