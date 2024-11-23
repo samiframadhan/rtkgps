@@ -163,6 +163,7 @@ def main(**kwargs):
                         "CFG_RATE_NAV",
                     ]
                 msg = UBXMessage.config_poll(layer, position, configs)
+                print(f"Sending data...")
                 send_queue.put(msg)
                 sleep(100)
                 # position = 0
