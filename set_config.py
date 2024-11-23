@@ -180,6 +180,11 @@ def main(**kwargs):
                 send_queue.put(msg)
                 sleep(10)
 
+                configs = [
+                        "CFG_RATE_MEAS",
+                        "CFG_RATE_NAV_PRIO",
+                        "CFG_RATE_NAV",
+                    ]
                 layer = POLL_LAYER_RAM
                 msg = UBXMessage.config_poll(layer, position, configs)
                 print(f"Polling data...")
