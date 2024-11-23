@@ -260,11 +260,11 @@ def main(**kwargs):
                     # logger.info(
                     #     f"\nSending a GNQ message to poll for an {msgid} response...\n"
                     # )
-                    if msgid == "NAV-GGA" and msgid == "NAV-GSA" :
+                    if msgid == "NAV-GGA" and msgid == "NAV-GSA":
                         msg = NMEAMessage("EI", "GNQ", POLL, msgId=msgid)
                         send_queue.put(msg)
-                    sleep(1)
-                sleep(2)
+                        sleep(1)
+                # sleep(1)
                 # stop_event.set()
 
             except KeyboardInterrupt:  # capture Ctrl-C
