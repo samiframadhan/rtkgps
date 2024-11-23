@@ -45,7 +45,8 @@ from pyubx2 import (
     UBX_PAYLOADS_POLL, 
     UBX_PROTOCOL, 
     UBXMessage, 
-    UBXReader )
+    UBXReader,
+    UBX_CONFIG_DATABASE )
 
 get_status = False
 
@@ -102,6 +103,12 @@ def main(**kwargs):
     Main routine.
     """
 
+    configs = {
+        "CFG_RATE_MEAS": 200,
+        "CFG_RATE_NAV_PRIO": 200,
+        "CFG_RATE_NAV": 200,
+    }
+
     port = kwargs.get("port", "/dev/ttyACM0")
     baudrate = int(kwargs.get("baudrate", 38400))
     timeout = float(kwargs.get("timeout", 0.1))
@@ -147,48 +154,33 @@ def main(**kwargs):
                 # necessarily arrive in sequence)
                 count = 0
                 msg = None
-                # for name in UBX_CONFIG_DATABASE:
-                #     position = 0
-                #     layer = POLL_LAYER_RAM  # volatile memory
-                #     CONFIG_KEY1 = "CFG_MSGOUT_UBX_MON_COMMS_UART1"
-                #     CONFIG_VAL1 = 1
-                #     CONFIG_KEY2 = "CFG_MSGOUT_UBX_MON_TXBUF_UART1"
-                #     CONFIG_VAL2 = 1
-                    
-                #     keys = [CONFIG_KEY1, CONFIG_KEY2]
-                #     keys.append(name)
-
-                #     configs = [
-                #         "CFG_NAVHPG_DGNSSMODE",
-                #         "CFG_NAVSPG_DYNMODEL",
-                #         "CFG_RATE_MEAS",
-                #         "CFG_RTCM_DF003_IN",
-                #         "CFG_RTCM_DF003_IN_FILTER",
-                #         "CFG_UART1INPROT_RTCM3X",
-                #         "CFG_UART1OUTPROT_RTCM3X",
-                #         "CFG_UART2INPROT_RTCM3X",
-                #         "CFG_UART2OUTPROT_RTCM3X"
-                #     ]
-                #     msg = UBXMessage.config_poll(layer, position, configs)
-                #     print(f"Config: {name}")
-                #     count += 1
-                #     if count == 10:
-                #         break
-                #     sleep(1)
+                
                 position = 0
-                layer = SET_LAYER_BBR  # volatile memory
+                layer = POLL_LAYER_RAM  # volatile memory
                 configs = [
-                        ("CFG_NAVHPG_DGNSSMODE",""),
-                        ("CFG_NAVSPG_DYNMODEL",""),
-                        ("CFG_RATE_MEAS",""),
-                        ("CFG_RTCM_DF003_IN",""),
-                        ("CFG_RTCM_DF003_IN_FILTER",""),
-                        ("CFG_UART1INPROT_RTCM3X",""),
-                        ("CFG_UART1OUTPROT_RTCM3X",""),
-                        ("CFG_UART2INPROT_RTCM3X",""),
-                        ("CFG_UART2OUTPROT_RTCM3X","")
+                        "CFG_RATE_MEAS",
+                        "CFG_RATE_NAV_PRIO",
+                        "CFG_RATE_NAV",
                     ]
                 msg = UBXMessage.config_poll(layer, position, configs)
+                send_queue.put(msg)
+                sleep(100)
+                # position = 0
+                # layer = SET_LAYER_BBR  # volatile memory
+                # configs = [
+                #         # ("CFG_NAVHPG_DGNSSMODE",""),
+                #         # ("CFG_NAVSPG_DYNMODEL",""),
+                #         ("CFG_RATE_MEAS",200),
+                #         ("CFG_RATE_MEAS",200),
+                #         ("CFG_RATE_MEAS",200),
+                #         # ("CFG_RTCM_DF003_IN",""),
+                #         # ("CFG_RTCM_DF003_IN_FILTER",""),
+                #         # ("CFG_UART1INPROT_RTCM3X",""),
+                #         # ("CFG_UART1OUTPROT_RTCM3X",""),
+                #         # ("CFG_UART2INPROT_RTCM3X",""),
+                #         # ("CFG_UART2OUTPROT_RTCM3X","")
+                #     ]
+                # msg = UBXMessage.config_poll(layer, position, configs)
                 # send_queue.put(msg)
                 sleep(100)
                 stop_event.set()
