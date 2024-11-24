@@ -233,9 +233,9 @@ def broadcast(tcp_server: TCPServer, gps_data_queue: Queue, ntrip_client: GNSSNT
 
         nanoseconds = time_ns() - last_count
         seconds = nanoseconds/1000
-        if seconds > 10:
-            last_count = time_ns()
-            rate_count = 0
+        # if seconds > 10:
+        #     last_count = time_ns()
+        #     rate_count = 0
 
 def main(**kwargs):
     """
