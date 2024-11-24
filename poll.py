@@ -290,6 +290,7 @@ def main(**kwargs):
                 # Poll for each NMEA sentence type.
                 # NB: Your receiver may not support all types. It will return a
                 # GNTXT "NMEA unknown msg" response for any types it doesn't support.
+                count = 0
                 for nam in UBX_PAYLOADS_POLL:
                     # if nam[0:4] == "NAV-":
                     #     print(f"Polling {nam} message type...")
