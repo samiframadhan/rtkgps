@@ -140,24 +140,54 @@ def main(**kwargs):
                 # necessarily arrive in sequence)
                 count = 0
                 for nam in UBX_PAYLOADS_POLL:
-                    if nam[0:4] == "NAV-":
+                    # if nam[0:4] == "NAV-":
+                    #     print(f"Polling {nam} message type...")
+                    #     msg = UBXMessage("NAV", nam, POLL)
+                    #     send_queue.put(msg)
+                    #     count += 1
+                    #     sleep(1)
+                    if nam == "NAV-HPPOSECEF":
                         print(f"Polling {nam} message type...")
                         msg = UBXMessage("NAV", nam, POLL)
                         send_queue.put(msg)
                         count += 1
                         sleep(1)
-                    if nam[0:4] == "RXM-":
+                    if nam == "NAV-HPPOSLLH":
                         print(f"Polling {nam} message type...")
-                        msg = UBXMessage("RXM", nam, POLL)
+                        msg = UBXMessage("NAV", nam, POLL)
                         send_queue.put(msg)
                         count += 1
                         sleep(1)
-                    if nam[0:4] == "MON-":
+                    if nam == "NAV-POSECEF":
                         print(f"Polling {nam} message type...")
-                        msg = UBXMessage("MON", nam, POLL)
+                        msg = UBXMessage("NAV", nam, POLL)
                         send_queue.put(msg)
                         count += 1
                         sleep(1)
+                    if nam == "NAV-POSLLH":
+                        print(f"Polling {nam} message type...")
+                        msg = UBXMessage("NAV", nam, POLL)
+                        send_queue.put(msg)
+                        count += 1
+                        sleep(1)
+                    if nam == "NAV-DOP":
+                        print(f"Polling {nam} message type...")
+                        msg = UBXMessage("NAV", nam, POLL)
+                        send_queue.put(msg)
+                        count += 1
+                        sleep(1)
+                    # if nam[0:4] == "RXM-":
+                    #     print(f"Polling {nam} message type...")
+                    #     msg = UBXMessage("RXM", nam, POLL)
+                    #     send_queue.put(msg)
+                    #     count += 1
+                    #     sleep(1)
+                    # if nam[0:4] == "MON-":
+                    #     print(f"Polling {nam} message type...")
+                    #     msg = UBXMessage("MON", nam, POLL)
+                    #     send_queue.put(msg)
+                    #     count += 1
+                    #     sleep(1)
                 # stop_event.set()
                 print(f"{count} NAV message types polled.")
                 while count is not 0:
