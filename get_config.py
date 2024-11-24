@@ -84,7 +84,7 @@ def io_data(
                 continue
 
 
-def process_data(queue: Queue, stop: Event):
+def process_data(queue: Queue, result: Queue, stop: Event):
     """
     THREADED
     Get UBX data from queue and display.
@@ -95,6 +95,7 @@ def process_data(queue: Queue, stop: Event):
             (_, parsed) = queue.get()
             # TODO
             print(f"Parsed: {parsed}")
+            result.put(parsed)
             queue.task_done()
 
 
@@ -112,6 +113,7 @@ def main(**kwargs):
 
         read_queue = Queue()
         send_queue = Queue()
+        result_queue =  Queue()
         stop_event = Event()
         stop_event.clear()
 
@@ -129,6 +131,7 @@ def main(**kwargs):
             target=process_data,
             args=(
                 read_queue,
+                result_queue,
                 stop_event,
             ),
         )
@@ -183,20 +186,22 @@ def main(**kwargs):
                         "CFG_NAVSPG_DYNMODEL",
                         "CFG_RATE_MEAS",
                         "CFG_RATE_NAV",
-                        # "CFG_RATE_NAV_PRIO",
-                        "CFG_RTCM_DF003_IN",
-                        "CFG_RTCM_DF003_IN_FILTER",
+                        "CFG_RATE_TIMEREF",
                         "CFG_UART1INPROT_RTCM3X",
-                        "CFG_UART1OUTPROT_RTCM3X",
                         "CFG_UART2INPROT_RTCM3X",
-                        "CFG_UART2OUTPROT_RTCM3X",
-                        "CFG_MSGOUT_UBX_RXM_COR_UART1",
-                        "CFG_MSGOUT_UBX_RXM_COR_UART2",
                     ]
+                for msgid in UBX_CONFIG_DATABASE:
+                    if msgid[0:14] == "CFG_MSGOUT_NME":
+                        if msgid[-4:] == "UART1" or msgid[-3:] == "USB":
+                            configs.append(msgid)
+                print(configs)
+                print(len(configs))
                 msg = UBXMessage.config_poll(layer, position, configs)
                 send_queue.put(msg)
-                sleep(10)
                 print(f"Sending msgs: {configs}")
+                while result_queue.empty:
+                    sleep(1)
+                    print("Waiting response...")
                 stop_event.set()
                 # print(f"{count} NAV message types polled.")
 
