@@ -193,7 +193,8 @@ def main(**kwargs):
                 for msgid in UBX_CONFIG_DATABASE:
                     if msgid[0:14] == "CFG_MSGOUT_NME":
                         if msgid[-4:] == "UART1" or msgid[-3:] == "USB":
-                            configs.append(msgid)
+                            if "GGA" in msgid or "GSV" in msgid or "GSA" in msgid:
+                                configs.append(msgid)
                 print(configs)
                 print(len(configs))
                 msg = UBXMessage.config_poll(layer, position, configs)
