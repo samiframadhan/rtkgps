@@ -216,6 +216,9 @@ def broadcast(tcp_server: TCPServer, gps_data_queue: Queue, ntrip_client: GNSSNT
                 tcp_server.broadcast(message=message)
                 rate_count += 1
                 seconds = time() - last_count
+                if seconds > 100:
+                    last_count = time()
+                    rate_count = 0
                 logger.info(f"{rate_count/seconds} msg per sec")
                 gps_data_queue.task_done()
             else:
