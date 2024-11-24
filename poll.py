@@ -228,11 +228,14 @@ def main(**kwargs):
         send_queue = Queue()
         stop_event = Event()
 
+        logger.info("Starting tcp server...")
+
         tcp_server = TCPServer(host="0.0.0.0",port=5051)
 
         server_thread = Thread(target=tcp_server.start)
         server_thread.daemon = True
         server_thread.start()
+
 
         io_thread = Thread(
             target=io_data,
@@ -254,13 +257,16 @@ def main(**kwargs):
                 stop_event,
             ),
         )
-
         logger.info("\nStarting handler threads. Press Ctrl-C to terminate...")
+        logger.info("Starting io thread...")
         io_thread.start()
+        logger.info("Starting process thread...")
         process_thread.start()
 
+        logger.info("Starting ntrip thread...")
         ntrip_client = ntrip(gga_queue, send_queue, kwargs)
 
+        logger.info("Starting broadcast thread...")
         broadcast_thread = Thread(
             target=broadcast,
             args=(
