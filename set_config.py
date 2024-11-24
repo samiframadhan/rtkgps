@@ -111,7 +111,7 @@ def main(**kwargs):
         "CFG_RATE_NAV": 200,
     }
 
-    port = kwargs.get("port", "/dev/ttyACM0")
+    port = kwargs.get("port", "/dev/serial/by-id/usb-u-blox_AG_-_www.u-blox.com_u-blox_GNSS_receiver-if00")
     baudrate = int(kwargs.get("baudrate", 38400))
     timeout = float(kwargs.get("timeout", 0.1))
 
