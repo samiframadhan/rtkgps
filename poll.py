@@ -114,7 +114,7 @@ def process_data(gga_queue: Queue, data_queue: Queue, gps_queue: Queue, stop: Ev
         try:
             # Attempt to get data from the queue with a small timeout
             (raw_data, parsed) = data_queue.get(timeout=0.1)
-        except Queue.Empty:
+        except Empty:
             continue
 
         if hasattr(parsed, "lat"):
