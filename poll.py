@@ -134,10 +134,7 @@ def process_data(gga_queue: Queue, data_queue: Queue, gps_queue: Queue, stop: Ev
                 lat.append(parsed.lat)
                 long.append(parsed.lon)
 
-        # Update fix and DOP values if available
-        if hasattr(parsed, "gpsFix"):
-            fix.append(parsed.gpsFix)
-
+        # Update DOP values if available
         if hasattr(parsed, "pDOP"):
             PDOP.append(parsed.pDOP)
             HDOP.append(parsed.hDOP)
@@ -146,6 +143,7 @@ def process_data(gga_queue: Queue, data_queue: Queue, gps_queue: Queue, stop: Ev
         # Handle GGA messages
         if hasattr(parsed, "msgID") and parsed.msgID == "GGA":
             logger.info(f"Fix type: {parsed.quality}")
+            fix.append(parsed.quality)
             gga_queue.put((raw_data, parsed))
         
         data_queue.task_done()
