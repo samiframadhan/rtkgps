@@ -119,19 +119,19 @@ def process_data(gga_queue: Queue, data_queue: Queue, gps_queue: Queue, stop: Ev
 
         if hasattr(parsed, "lat"):
             # Check for timeout since last high-precision update
-            if time() - last_hppos > timeout:
-                hppos = False
+            # if time() - last_hppos > timeout:
+            #     hppos = False
 
-            # Update with high-precision data if valid
-            if hasattr(parsed, "invalidLlh") and parsed.invalidLlh != 1:
-                lat.append(parsed.lat)
-                long.append(parsed.lon)
-                height.append(parsed.height)
-                hppos = True
-                last_hppos = time()
-            elif not hppos:  # Use less precise data after timeout
-                lat.append(parsed.lat)
-                long.append(parsed.lon)
+            # # Update with high-precision data if valid
+            # if hasattr(parsed, "invalidLlh") and parsed.invalidLlh != 1:
+            #     lat.append(parsed.lat)
+            #     long.append(parsed.lon)
+            #     height.append(parsed.height)
+            #     hppos = True
+            #     last_hppos = time()
+            # elif not hppos:  # Use less precise data after timeout
+            #     lat.append(parsed.lat)
+            #     long.append(parsed.lon)
 
         # Update fix and DOP values if available
         if hasattr(parsed, "gpsFix"):
