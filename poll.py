@@ -47,7 +47,7 @@ from ntripclient import GNSSNTRIPClient
 from tcp import TCPServer
 
 logger = getLogger("rtkgps")
-# set_logging(getLogger("ntripclient"), VERBOSITY_HIGH)
+set_logging(getLogger("ntripclient"), VERBOSITY_HIGH)
 set_logging(getLogger("tcp"), VERBOSITY_HIGH)
 set_logging(getLogger("rtkgps"), VERBOSITY_HIGH)
 poll_str = ["GGA", "GLL", "GNS", "LR2", "MOB", "RMA", "RMB", "RMC", "TRF", "WPL", "BWC", "BWR"]
@@ -299,25 +299,25 @@ def main(**kwargs):
                     #     count += 1
                     #     sleep(1)
                     if nam == "NAV-HPPOSLLH":
-                        logger.info(f"Polling {nam} message type...")
+                        # logger.info(f"Polling {nam} message type...")
                         msg = UBXMessage("NAV", nam, POLL)
                         send_queue.put(msg)
                         count += 1
                         sleep(0.1)
                     if nam == "NAV-POSLLH":
-                        logger.info(f"Polling {nam} message type...")
+                        # logger.info(f"Polling {nam} message type...")
                         msg = UBXMessage("NAV", nam, POLL)
                         send_queue.put(msg)
                         count += 1
                         sleep(0.1)
                     if nam == "NAV-DOP":
-                        logger.info(f"Polling {nam} message type...")
+                        # logger.info(f"Polling {nam} message type...")
                         msg = UBXMessage("NAV", nam, POLL)
                         send_queue.put(msg)
                         count += 1
                         sleep(0.1)
                     if nam == "NAV-STATUS":
-                        logger.info(f"Polling {nam} message type...")
+                        # logger.info(f"Polling {nam} message type...")
                         msg = UBXMessage("NAV", nam, POLL)
                         send_queue.put(msg)
                         count += 1
