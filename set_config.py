@@ -105,12 +105,6 @@ def main(**kwargs):
     Main routine.
     """
 
-    configs = {
-        "CFG_RATE_MEAS": 200,
-        "CFG_RATE_NAV_PRIO": 200,
-        "CFG_RATE_NAV": 200,
-    }
-
     port = kwargs.get("port", "/dev/serial/by-id/usb-u-blox_AG_-_www.u-blox.com_u-blox_GNSS_receiver-if00")
     baudrate = int(kwargs.get("baudrate", 38400))
     timeout = float(kwargs.get("timeout", 0.1))
@@ -179,8 +173,8 @@ def main(**kwargs):
                 data_list = [
                         # ("CFG_NAVHPG_DGNSSMODE",""),
                         # ("CFG_NAVSPG_DYNMODEL",""),
-                        ("CFG_RATE_MEAS",100),
-                        ("CFG_RATE_NAV",2),
+                        ("CFG_RATE_MEAS",150),
+                        ("CFG_RATE_NAV",1),
                         # ("CFG_RTCM_DF003_IN",""),
                         # ("CFG_RTCM_DF003_IN_FILTER",""),
                         # ("CFG_UART1INPROT_RTCM3X",""),
