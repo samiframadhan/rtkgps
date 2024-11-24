@@ -146,19 +146,7 @@ def main(**kwargs):
                     #     send_queue.put(msg)
                     #     count += 1
                     #     sleep(1)
-                    if nam == "NAV-HPPOSECEF":
-                        print(f"Polling {nam} message type...")
-                        msg = UBXMessage("NAV", nam, POLL)
-                        send_queue.put(msg)
-                        count += 1
-                        sleep(0.1)
                     if nam == "NAV-HPPOSLLH":
-                        print(f"Polling {nam} message type...")
-                        msg = UBXMessage("NAV", nam, POLL)
-                        send_queue.put(msg)
-                        count += 1
-                        sleep(0.1)
-                    if nam == "NAV-POSECEF":
                         print(f"Polling {nam} message type...")
                         msg = UBXMessage("NAV", nam, POLL)
                         send_queue.put(msg)
