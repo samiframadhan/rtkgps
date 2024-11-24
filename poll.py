@@ -47,7 +47,7 @@ from ntripclient import GNSSNTRIPClient
 from tcp import TCPServer
 
 logger = getLogger("rtkgps")
-set_logging(getLogger("ntripclient"), VERBOSITY_HIGH)
+# set_logging(getLogger("ntripclient"), VERBOSITY_HIGH)
 set_logging(getLogger("tcp"), VERBOSITY_HIGH)
 set_logging(getLogger("rtkgps"), VERBOSITY_HIGH)
 poll_str = ["GGA", "GLL", "GNS", "LR2", "MOB", "RMA", "RMB", "RMC", "TRF", "WPL", "BWC", "BWR"]
@@ -117,21 +117,21 @@ def process_data(gga_queue: Queue, data_queue: Queue, gps_queue: Queue, stop: Ev
         except:
             continue
 
-        # if hasattr(parsed, "lat"):
+        if hasattr(parsed, "lat"):
             # Check for timeout since last high-precision update
-            # if time() - last_hppos > timeout:
-            #     hppos = False
+            if time() - last_hppos > timeout:
+                hppos = False
 
-            # # Update with high-precision data if valid
-            # if hasattr(parsed, "invalidLlh") and parsed.invalidLlh != 1:
-            #     lat.append(parsed.lat)
-            #     long.append(parsed.lon)
-            #     height.append(parsed.height)
-            #     hppos = True
-            #     last_hppos = time()
-            # elif not hppos:  # Use less precise data after timeout
-            #     lat.append(parsed.lat)
-            #     long.append(parsed.lon)
+            # Update with high-precision data if valid
+            if hasattr(parsed, "invalidLlh") and parsed.invalidLlh != 1:
+                lat.append(parsed.lat)
+                long.append(parsed.lon)
+                height.append(parsed.height)
+                hppos = True
+                last_hppos = time()
+            elif not hppos:  # Use less precise data after timeout
+                lat.append(parsed.lat)
+                long.append(parsed.lon)
 
         # Update fix and DOP values if available
         if hasattr(parsed, "gpsFix"):
