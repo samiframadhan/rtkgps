@@ -151,7 +151,12 @@ def process_data(gga_queue: Queue, data_queue: Queue, gps_queue: Queue, stop: Ev
 
         # Ensure all deques have data before putting into gps_queue
         deq = [lat, long, height, fix, PDOP, HDOP, VDOP]
-        if all(len(val) > 0 for val in deq):
+        count = 0
+        for val in deq:
+            if len(val) == 0:
+                count = 1
+        
+        if count == 0:
             gps_queue.put((lat, long, height, fix, PDOP, HDOP, VDOP))
                 
 def ntrip(gga_queue: Queue, send_queue: Queue, kwargs):
