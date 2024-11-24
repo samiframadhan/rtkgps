@@ -117,7 +117,7 @@ def process_data(gga_queue: Queue, data_queue: Queue, gps_queue: Queue, stop: Ev
         except:
             continue
 
-        logger.info(f"Msg: {parsed}")
+        logger.debug(f"Msg: {parsed}")
         if hasattr(parsed, "lat"):
             # Check for timeout since last high-precision update
             if time() - last_hppos > timeout:
