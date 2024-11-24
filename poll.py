@@ -194,6 +194,7 @@ def ntrip(gga_queue: Queue, send_queue: Queue, kwargs):
 
 def broadcast(tcp_server: TCPServer, gps_data_queue: Queue, ntrip_client: GNSSNTRIPClient, stop: Event):
     rate_count = 0
+    per_sec = 0
     last_count = time_ns()
     while not stop.is_set():
         if not gps_data_queue.empty():
@@ -223,15 +224,17 @@ def broadcast(tcp_server: TCPServer, gps_data_queue: Queue, ntrip_client: GNSSNT
                 logger.info(f"Broadcasting to tcp clients: {message}")
                 tcp_server.broadcast(message=message)
                 rate_count += 1
-                nanoseconds = time_ns() - last_count
-                seconds = nanoseconds/1000
                 logger.info(f"{rate_count/seconds} msg per sec")
-                if seconds > 60:
-                    last_count = time_ns()
-                    rate_count = 0
+                
                 gps_data_queue.task_done()
             else:
                 gps_data_queue.task_done()
+        nanoseconds = time_ns() - last_count
+        seconds = nanoseconds/1000
+        per_sec = rate_count / seconds
+        if seconds > 60:
+            last_count = time_ns()
+            rate_count = 0
             
 
 def main(**kwargs):
