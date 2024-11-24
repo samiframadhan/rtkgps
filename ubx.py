@@ -191,7 +191,7 @@ def main(**kwargs):
                 # stop_event.set()
                 print(f"{count} NAV message types polled.")
                 while count is not 0:
-                    sleep(5)
+                    sleep(1)
                     print("Waiting for the incoming messages...")
                     count -= 1
 
