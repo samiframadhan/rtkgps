@@ -189,8 +189,8 @@ def main(**kwargs):
                         # ("CFG_UART2OUTPROT_RTCM3X","")
                     ]
                 
-                for msg in configs:
-                    data_list.append((msg, 0))
+                # for msg in configs:
+                    # data_list.append((msg, 0))
                 
                 msg = UBXMessage.config_set(layer, transaction=0, cfgData=data_list)
                 print(f"Setting data...")
