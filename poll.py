@@ -29,16 +29,17 @@ Created on 07 Aug 2021
 :license: BSD 3-Clause
 """
 
-from queue import Queue
+from queue import Queue, Empty
 from sys import argv
 from os import getenv
 from threading import Event, Thread
-from time import sleep
+from time import sleep, time
 from logging import getLogger
 from collections import deque
 
 from serial import Serial
 
+from pyubx2 import POLL, UBX_PAYLOADS_POLL, UBX_PROTOCOL, NMEA_PROTOCOL, UBXMessage, UBXReader
 from pynmeagps import NMEA_MSGIDS, POLL, NMEAMessage, NMEAReader
 from pygnssutils import VERBOSITY_HIGH, VERBOSITY_DEBUG, set_logging
 
@@ -54,7 +55,7 @@ only_gga = ["GGA"]
 
 def io_data(
     stream: object,
-    nmr: NMEAReader,
+    ubr: UBXReader,
     readqueue: Queue,
     sendqueue: Queue,
     stop: Event,
@@ -71,7 +72,7 @@ def io_data(
     while not stop.is_set():
         try:
             if stream.in_waiting:
-                (raw_data, parsed_data) = nmr.read()
+                (raw_data, parsed_data) = ubr.read()
                 
                 if parsed_data:
                     readqueue.put((raw_data, parsed_data))
@@ -81,22 +82,22 @@ def io_data(
                 if data is not None:
                     if type(data) is tuple:
                         raw, parsed = data
-                        nmr.datastream.write(raw)
+                        ubr.datastream.write(raw)
                     else:
-                        nmr.datastream.write(data.serialize())
+                        ubr.datastream.write(data.serialize())
                 sendqueue.task_done()
 
         except Exception as err:
             logger.info(f"\n\nSomething went wrong {err}\n\n")
             continue
 
-
 def process_data(gga_queue: Queue, data_queue: Queue, gps_queue: Queue, stop: Event):
     """
     THREADED
-    Get NMEA data from data_queue and display.
+    Get NMEA data from data_queue and process.
     """
 
+    # Initialize deques for storing most recent values
     lat = deque(maxlen=1)
     long = deque(maxlen=1)
     height = deque(maxlen=1)
@@ -105,34 +106,54 @@ def process_data(gga_queue: Queue, data_queue: Queue, gps_queue: Queue, stop: Ev
     HDOP = deque(maxlen=1)
     VDOP = deque(maxlen=1)
 
+    hppos = False
+    timeout = 1  # Timeout in seconds
+    last_hppos = time()
+
     while not stop.is_set():
-        if data_queue.empty() is False:
-            (raw_data, parsed) = data_queue.get()
-            # logger.info(parsed)
-            if hasattr(parsed, "lat") and hasattr(parsed, "lon"):
-                logger.info(f"MSGID: {parsed.msgID}. Long :{parsed.lon}, Lat :{parsed.lat}")
+        try:
+            # Attempt to get data from the queue with a small timeout
+            (raw_data, parsed) = data_queue.get(timeout=0.1)
+        except Queue.Empty:
+            continue
+
+        if hasattr(parsed, "lat"):
+            # Check for timeout since last high-precision update
+            if time() - last_hppos > timeout:
+                hppos = False
+
+            # Update with high-precision data if valid
+            if hasattr(parsed, "invalidLlh") and parsed.invalidLlh != 1:
                 lat.append(parsed.lat)
                 long.append(parsed.lon)
-                if parsed.msgID == "GGA":
-                    logger.info(f"Fix type: {parsed.quality}")
-                    fix.append(parsed.quality)
-                    height.append(parsed.alt)
-                    gga_queue.put((raw_data, parsed))
-            if parsed.msgID == "GSA":
-                PDOP.append(parsed.PDOP)
-                HDOP.append(parsed.HDOP)
-                VDOP.append(parsed.VDOP)
-            data_queue.task_done()
-        deq = [lat, long, height, fix, PDOP, HDOP, VDOP]
-        count = 0
-        for val in deq:
-            if len(val) == 0:
-                count = 1
+                height.append(parsed.height)
+                hppos = True
+                last_hppos = time()
+            elif not hppos:  # Use less precise data after timeout
+                lat.append(parsed.lat)
+                long.append(parsed.lon)
+
+        # Update fix and DOP values if available
+        if hasattr(parsed, "gpsFix"):
+            fix.append(parsed.gpsFix)
+
+        if hasattr(parsed, "pDOP"):
+            PDOP.append(parsed.pDOP)
+            HDOP.append(parsed.hDOP)
+            VDOP.append(parsed.vDOP)
+
+        # Handle GGA messages
+        if hasattr(parsed, "msgID") and parsed.msgID == "GGA":
+            logger.info(f"Fix type: {parsed.quality}")
+            gga_queue.put((raw_data, parsed))
         
-        if count == 0:
+        data_queue.task_done()
+
+        # Ensure all deques have data before putting into gps_queue
+        deq = [lat, long, height, fix, PDOP, HDOP, VDOP]
+        if all(len(val) > 0 for val in deq):
             gps_queue.put((lat, long, height, fix, PDOP, HDOP, VDOP))
                 
-
 def ntrip(gga_queue: Queue, send_queue: Queue, kwargs):
     server = kwargs.get("server", "69.64.185.41")
     port = int(kwargs.get("port", 7801))
@@ -197,7 +218,9 @@ def main(**kwargs):
     timeout = float(kwargs.get("timeout", 1))
 
     with Serial(port, baudrate, timeout=timeout) as serial_stream:
-        nmeareader = NMEAReader(serial_stream)
+        ubxreader = UBXReader(
+            serial_stream, 
+            protfilter= UBX_PROTOCOL | NMEA_PROTOCOL)
 
         read_queue = Queue()
         gga_queue = Queue()
@@ -215,7 +238,7 @@ def main(**kwargs):
             target=io_data,
             args=(
                 serial_stream,
-                nmeareader,
+                ubxreader,
                 read_queue,
                 send_queue,
                 stop_event,
@@ -256,14 +279,37 @@ def main(**kwargs):
                 # Poll for each NMEA sentence type.
                 # NB: Your receiver may not support all types. It will return a
                 # GNTXT "NMEA unknown msg" response for any types it doesn't support.
-                for msgid in NMEA_MSGIDS:
-                    # logger.info(
-                    #     f"\nSending a GNQ message to poll for an {msgid} response...\n"
-                    # )
-                    if msgid == "NAV-GGA" and msgid == "NAV-GSA":
-                        msg = NMEAMessage("EI", "GNQ", POLL, msgId=msgid)
+                for nam in UBX_PAYLOADS_POLL:
+                    # if nam[0:4] == "NAV-":
+                    #     print(f"Polling {nam} message type...")
+                    #     msg = UBXMessage("NAV", nam, POLL)
+                    #     send_queue.put(msg)
+                    #     count += 1
+                    #     sleep(1)
+                    if nam == "NAV-HPPOSLLH":
+                        print(f"Polling {nam} message type...")
+                        msg = UBXMessage("NAV", nam, POLL)
                         send_queue.put(msg)
-                        sleep(1)
+                        count += 1
+                        sleep(0.1)
+                    if nam == "NAV-POSLLH":
+                        print(f"Polling {nam} message type...")
+                        msg = UBXMessage("NAV", nam, POLL)
+                        send_queue.put(msg)
+                        count += 1
+                        sleep(0.1)
+                    if nam == "NAV-DOP":
+                        print(f"Polling {nam} message type...")
+                        msg = UBXMessage("NAV", nam, POLL)
+                        send_queue.put(msg)
+                        count += 1
+                        sleep(0.1)
+                    if nam == "NAV-STATUS":
+                        print(f"Polling {nam} message type...")
+                        msg = UBXMessage("NAV", nam, POLL)
+                        send_queue.put(msg)
+                        count += 1
+                        sleep(0.1)
                 # sleep(1)
                 # stop_event.set()
 
