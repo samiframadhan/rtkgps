@@ -33,7 +33,7 @@ from queue import Queue, Empty
 from sys import argv
 from os import getenv
 from threading import Event, Thread
-from time import sleep, time
+from time import sleep, time, time_ns
 from logging import getLogger
 from collections import deque
 
@@ -194,7 +194,7 @@ def ntrip(gga_queue: Queue, send_queue: Queue, kwargs):
 
 def broadcast(tcp_server: TCPServer, gps_data_queue: Queue, ntrip_client: GNSSNTRIPClient, stop: Event):
     rate_count = 0
-    last_count = time()
+    last_count = time_ns()
     while not stop.is_set():
         if not gps_data_queue.empty():
             connect = "ON" if ntrip_client.connected == True else "OFF"
@@ -223,11 +223,12 @@ def broadcast(tcp_server: TCPServer, gps_data_queue: Queue, ntrip_client: GNSSNT
                 logger.info(f"Broadcasting to tcp clients: {message}")
                 tcp_server.broadcast(message=message)
                 rate_count += 1
-                seconds = time() - last_count
+                nanoseconds = time_ns() - last_count
+                seconds = nanoseconds/1000
+                logger.info(f"{rate_count/seconds} msg per sec")
                 if seconds > 5:
                     last_count = time()
                     rate_count = 0
-                logger.info(f"{rate_count/seconds} msg per sec")
                 gps_data_queue.task_done()
             else:
                 gps_data_queue.task_done()
