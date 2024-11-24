@@ -105,6 +105,9 @@ def process_data(gga_queue: Queue, data_queue: Queue, gps_queue: Queue, stop: Ev
     PDOP = deque(maxlen=1)
     HDOP = deque(maxlen=1)
     VDOP = deque(maxlen=1)
+    last_pdop = 0
+    last_hdop = 0
+    last_vdop = 0
 
     hppos = False
     timeout = 1  # Timeout in seconds
@@ -139,6 +142,13 @@ def process_data(gga_queue: Queue, data_queue: Queue, gps_queue: Queue, stop: Ev
             PDOP.append(parsed.pDOP)
             HDOP.append(parsed.hDOP)
             VDOP.append(parsed.vDOP)
+            last_pdop = parsed.pDOP
+            last_hdop = parsed.hDOP
+            last_vdop = parsed.vDOP
+        else:
+            PDOP.append(last_pdop)
+            HDOP.append(last_hdop)
+            VDOP.append(last_vdop)
 
         # Handle GGA messages
         if hasattr(parsed, "msgID") and parsed.msgID == "GGA":
