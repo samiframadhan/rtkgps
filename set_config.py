@@ -174,7 +174,7 @@ def main(**kwargs):
                 data_list = [
                         # ("CFG_NAVHPG_DGNSSMODE",""),
                         # ("CFG_NAVSPG_DYNMODEL",""),
-                        ("CFG_MSGOUT_NMEA_ID_GGA_USB", 2),
+                        ("CFG_MSGOUT_NMEA_ID_GGA_USB", 1),
                         # ("CFG_RATE_MEAS",100),
                         # ("CFG_RATE_NAV",1),
                         # ("CFG_RTCM_DF003_IN",""),
