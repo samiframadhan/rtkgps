@@ -196,6 +196,7 @@ def broadcast(tcp_server: TCPServer, gps_data_queue: Queue, ntrip_client: GNSSNT
     rate_count = 0
     per_sec = 0
     last_count = time_ns()
+    seconds = 0
     while not stop.is_set():
         if not gps_data_queue.empty():
             connect = "ON" if ntrip_client.connected == True else "OFF"
