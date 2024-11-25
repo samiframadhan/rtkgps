@@ -156,11 +156,12 @@ def main(**kwargs):
                 configs = [
                         # "CFG_MSGOUT_NMEA_ID_GSV_USB",
                         # "CFG_MSGOUT_NMEA_ID_GSA_USB",
+                        "CFG_MSGOUT_NMEA_ID_GGA_USB",
                         # "CFG_MSGOUT_NMEA_ID_GLL_USB",
                         # "CFG_MSGOUT_NMEA_ID_VTG_USB",
                         # "CFG_MSGOUT_NMEA_ID_RMC_USB",
-                        "CFG_RATE_MEAS",
-                        "CFG_RATE_NAV",
+                        # "CFG_RATE_MEAS",
+                        # "CFG_RATE_NAV",
                         # "CFG_RATE_NAV_PRIO",
                     ]
                 msg = UBXMessage.config_poll(layer, position, configs)
@@ -173,8 +174,9 @@ def main(**kwargs):
                 data_list = [
                         # ("CFG_NAVHPG_DGNSSMODE",""),
                         # ("CFG_NAVSPG_DYNMODEL",""),
-                        ("CFG_RATE_MEAS",100),
-                        ("CFG_RATE_NAV",1),
+                        ("CFG_MSGOUT_NMEA_ID_GGA_USB", 2),
+                        # ("CFG_RATE_MEAS",100),
+                        # ("CFG_RATE_NAV",1),
                         # ("CFG_RTCM_DF003_IN",""),
                         # ("CFG_RTCM_DF003_IN_FILTER",""),
                         # ("CFG_UART1INPROT_RTCM3X",""),
