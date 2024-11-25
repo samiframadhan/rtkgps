@@ -343,7 +343,7 @@ def main(**kwargs):
                         send_queue.put(msg)
                         count += 1
                         
-                sleep(0.5)
+                sleep(0.1)
                 # stop_event.set()
 
             except KeyboardInterrupt:  # capture Ctrl-C
