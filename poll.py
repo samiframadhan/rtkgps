@@ -327,26 +327,26 @@ def main(**kwargs):
                         msg = UBXMessage("NAV", nam, POLL)
                         send_queue.put(msg)
                         count += 1
-                        sleep(0.1)
+                        
                     if nam == "NAV-POSLLH":
                         # logger.info(f"Polling {nam} message type...")
                         msg = UBXMessage("NAV", nam, POLL)
                         send_queue.put(msg)
                         count += 1
-                        sleep(0.1)
+                        
                     if nam == "NAV-DOP":
                         # logger.info(f"Polling {nam} message type...")
                         msg = UBXMessage("NAV", nam, POLL)
                         send_queue.put(msg)
                         count += 1
-                        sleep(0.1)
+                        
                     if nam == "NAV-STATUS":
                         # logger.info(f"Polling {nam} message type...")
                         msg = UBXMessage("NAV", nam, POLL)
                         send_queue.put(msg)
                         count += 1
-                        sleep(0.1)
-                # sleep(1)
+                        
+                sleep(0.5)
                 # stop_event.set()
 
             except KeyboardInterrupt:  # capture Ctrl-C
