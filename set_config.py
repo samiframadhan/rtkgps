@@ -175,8 +175,8 @@ def main(**kwargs):
                     data_list.append((msg, 0))
 
                 data_list.append(("CFG_MSGOUT_NMEA_ID_GGA_USB", 1))
-                data_list.append(("CFG_RATE_MEAS", 100))
-                data_list.append(("CFG_RATE_NAV", 1))
+                data_list.append(("CFG_RATE_MEAS", 50))
+                data_list.append(("CFG_RATE_NAV", 2))
                 
                 msg = UBXMessage.config_set(layer, transaction=0, cfgData=data_list)
                 print(f"Setting data...")
