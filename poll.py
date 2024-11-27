@@ -230,18 +230,19 @@ def broadcast(tcp_server: TCPServer, gps_data_queue: Queue, ntrip_client: GNSSNT
                 logger.info(f"Broadcasting to tcp clients: {last_data}")
                 tcp_server.broadcast(message=last_data)
                 prev_broadcast = time_ns()
+                logger.info(f"Timestamp: {prev_broadcast}")
                 
                 gps_data_queue.task_done()
             else:
                 gps_data_queue.task_done()
         
-        elif time_ns() - prev_broadcast > 1000: #if last count is more than 1 sec, broadcast last message
-            seconds = (time_ns() - prev_broadcast)/1000
-            data_freq = 1 / seconds
-            logger.info(f"{data_freq} msg per sec")
-            logger.info(f"Broadcasting to tcp clients: {last_data}")
-            tcp_server.broadcast(message=last_data)
-            prev_broadcast = time_ns()
+        # elif time_ns() - prev_broadcast > 1: #if last count is more than 1 sec, broadcast last message
+        #     seconds = (time_ns() - prev_broadcast)/1000
+        #     data_freq = 1 / seconds
+        #     logger.info(f"{data_freq} msg per sec")
+        #     logger.info(f"Broadcasting to tcp clients: {last_data}")
+        #     tcp_server.broadcast(message=last_data)
+        #     prev_broadcast = time_ns()
             
 
 def main(**kwargs):
