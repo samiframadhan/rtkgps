@@ -1,4 +1,5 @@
 from multiprocessing import Process, Event, Queue
+from sys import argv
 from collections import deque
 from time import sleep, time
 from logging import getLogger
@@ -174,4 +175,5 @@ def main(**kwargs):
 
 
 if __name__ == "__main__":
+
     main(**dict(arg.split("=") for arg in argv[1:]))
