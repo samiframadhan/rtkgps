@@ -157,6 +157,7 @@ def process_data(gga_queue: Queue, data_queue: Queue, gps_queue: Queue, stop: Ev
             gga_queue.put((raw_data, parsed))
         
         data_queue.task_done()
+        sleep(0.01)
 
         # Ensure all deques have data before putting into gps_queue
         deq = [lat, long, height, fix, PDOP, HDOP, VDOP]
@@ -200,6 +201,7 @@ def broadcast(tcp_server: TCPServer, gps_data_queue: Queue, ntrip_client: GNSSNT
     prev_broadcast = time()
     seconds = 0
     while not stop.is_set():
+        sleep(0.1)
         
         if seconds != 0:
             data_freq = rate_count / seconds
@@ -240,10 +242,8 @@ def broadcast(tcp_server: TCPServer, gps_data_queue: Queue, ntrip_client: GNSSNT
                 tcp_server.broadcast(message=last_data)
                 rate_count += 1
                 seconds = time() - last_count
-                seconds2 = time() - prev_broadcast
-                prev_broadcast = time()
-                test = 1/seconds2
-                logger.info(f"{test:.2f} msg per sec")
+                
+                logger.info(f"{data_freq:.2f} msg per sec")
                 
                 gps_data_queue.task_done()
             else:
