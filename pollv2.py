@@ -1,9 +1,9 @@
 from multiprocessing import Process, Event, Queue
-from sys import argv
 from collections import deque
 from time import sleep, time
 from logging import getLogger
 from os import getenv
+from sys import argv
 from serial import Serial
 from pyubx2 import UBXReader, UBXMessage, UBX_PROTOCOL, NMEA_PROTOCOL
 from pygnssutils import set_logging
@@ -31,7 +31,6 @@ def io_data(stream, ubr, readqueue, sendqueue, stop_event):
                         ubr.datastream.write(raw)
                     else:
                         ubr.datastream.write(data.serialize())
-                sendqueue.task_done()
 
         except Exception as err:
             logger.info(f"Something went wrong: {err}")
@@ -79,8 +78,6 @@ def process_data(gga_queue, data_queue, gps_queue, stop_event):
             logger.info(f"Fix type: {parsed.quality}")
             fix.append(parsed.quality)
             gga_queue.put((raw_data, parsed))
-
-        data_queue.task_done()
 
         if all(len(deque_) > 0 for deque_ in [lat, long, height, fix, PDOP, HDOP, VDOP]):
             gps_queue.put((lat, long, height, fix, PDOP, HDOP, VDOP))
@@ -133,7 +130,6 @@ def broadcast(tcp_server, gps_data_queue, ntrip_client, stop_event):
                 rate_count += 1
                 seconds = time() - last_count
                 logger.info(f"{data_freq:.2f} msg per sec")
-                gps_data_queue.task_done()
 
 
 def main(**kwargs):
@@ -175,5 +171,4 @@ def main(**kwargs):
 
 
 if __name__ == "__main__":
-
     main(**dict(arg.split("=") for arg in argv[1:]))
