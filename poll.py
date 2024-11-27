@@ -114,7 +114,7 @@ def process_data(gga_queue: Queue, data_queue: Queue, gps_queue: Queue, stop: Ev
     last_hppos = time()
 
     while not stop.is_set():
-        sleep(1.1)
+        sleep(0.5)
         try:
             # Attempt to get data from the queue with a small timeout
             (raw_data, parsed) = data_queue.get(timeout=0.1)
