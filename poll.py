@@ -201,7 +201,7 @@ def broadcast(tcp_server: TCPServer, gps_data_queue: Queue, ntrip_client: GNSSNT
     prev_broadcast = time()
     seconds = 0
     while not stop.is_set():
-        sleep(0.1)
+        sleep(0.2)
         
         if seconds != 0:
             data_freq = rate_count / seconds
