@@ -321,37 +321,37 @@ def main(**kwargs):
                 # Poll for each NMEA sentence type.
                 # NB: Your receiver may not support all types. It will return a
                 # GNTXT "NMEA unknown msg" response for any types it doesn't support.
-                count = 0
-                for nam in UBX_PAYLOADS_POLL:
-                    # if nam[0:4] == "NAV-":
-                    #     print(f"Polling {nam} message type...")
-                    #     msg = UBXMessage("NAV", nam, POLL)
-                    #     send_queue.put(msg)
-                    #     count += 1
-                    #     sleep(1)
-                    if nam == "NAV-HPPOSLLH":
-                        # logger.info(f"Polling {nam} message type...")
-                        msg = UBXMessage("NAV", nam, POLL)
-                        send_queue.put(msg)
-                        count += 1
+                # count = 0
+                # for nam in UBX_PAYLOADS_POLL:
+                #     # if nam[0:4] == "NAV-":
+                #     #     print(f"Polling {nam} message type...")
+                #     #     msg = UBXMessage("NAV", nam, POLL)
+                #     #     send_queue.put(msg)
+                #     #     count += 1
+                #     #     sleep(1)
+                #     if nam == "NAV-HPPOSLLH":
+                #         # logger.info(f"Polling {nam} message type...")
+                #         msg = UBXMessage("NAV", nam, POLL)
+                #         send_queue.put(msg)
+                #         count += 1
                         
-                    if nam == "NAV-POSLLH":
-                        # logger.info(f"Polling {nam} message type...")
-                        msg = UBXMessage("NAV", nam, POLL)
-                        send_queue.put(msg)
-                        count += 1
+                #     if nam == "NAV-POSLLH":
+                #         # logger.info(f"Polling {nam} message type...")
+                #         msg = UBXMessage("NAV", nam, POLL)
+                #         send_queue.put(msg)
+                #         count += 1
                         
-                    if nam == "NAV-DOP":
-                        # logger.info(f"Polling {nam} message type...")
-                        msg = UBXMessage("NAV", nam, POLL)
-                        send_queue.put(msg)
-                        count += 1
+                #     if nam == "NAV-DOP":
+                #         # logger.info(f"Polling {nam} message type...")
+                #         msg = UBXMessage("NAV", nam, POLL)
+                #         send_queue.put(msg)
+                #         count += 1
                         
-                    if nam == "NAV-STATUS":
-                        # logger.info(f"Polling {nam} message type...")
-                        msg = UBXMessage("NAV", nam, POLL)
-                        send_queue.put(msg)
-                        count += 1
+                #     if nam == "NAV-STATUS":
+                #         # logger.info(f"Polling {nam} message type...")
+                #         msg = UBXMessage("NAV", nam, POLL)
+                #         send_queue.put(msg)
+                #         count += 1
                         
                 sleep(0.1)
                 # stop_event.set()

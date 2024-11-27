@@ -160,6 +160,8 @@ def main(**kwargs):
                         "CFG_MSGOUT_NMEA_ID_GLL_USB",
                         "CFG_MSGOUT_NMEA_ID_VTG_USB",
                         "CFG_MSGOUT_NMEA_ID_RMC_USB",
+                        "CFG_MSGOUT_UBX_NAV_DOP_USB",
+                        "CFG_MSGOUT_UBX_NAV_HPPOSLLH_USB",
                         "CFG_RATE_MEAS",
                         "CFG_RATE_NAV",
                     ]
@@ -175,6 +177,10 @@ def main(**kwargs):
                     data_list.append((msg, 0))
 
                 data_list.append(("CFG_MSGOUT_NMEA_ID_GGA_USB", 1))
+                data_list.append(("CFG_MSGOUT_UBX_NAV_DOP_USB", 1))
+                data_list.append(("CFG_MSGOUT_UBX_NAV_HPPOSLLH_USB", 1))
+                data_list.append(("CFG_MSGOUT_UBX_NAV_POSLLH_USB", 1))
+                data_list.append(("CFG_MSGOUT_UBX_NAV_STATUS_USB", 1))
                 data_list.append(("CFG_RATE_MEAS", 50))
                 data_list.append(("CFG_RATE_NAV", 3))
                 
