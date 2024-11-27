@@ -230,7 +230,7 @@ def broadcast(tcp_server: TCPServer, gps_data_queue: Queue, ntrip_client: GNSSNT
                 logger.info(f"Broadcasting to tcp clients: {last_data}")
                 tcp_server.broadcast(message=last_data)
                 prev_broadcast = time_ns()
-                logger.info(f"Timestamp: {prev_broadcast}")
+                logger.info(f"Timestamp: {seconds}")
                 
                 gps_data_queue.task_done()
             else:
