@@ -180,8 +180,8 @@ def main(**kwargs):
                 data_list.append(("CFG_MSGOUT_UBX_NAV_HPPOSLLH_USB", 1))
                 data_list.append(("CFG_MSGOUT_UBX_NAV_POSLLH_USB", 1))
                 data_list.append(("CFG_MSGOUT_UBX_NAV_STATUS_USB", 1))
-                data_list.append(("CFG_RATE_MEAS", 600))
-                data_list.append(("CFG_RATE_NAV", 3))
+                data_list.append(("CFG_RATE_MEAS", 100))
+                data_list.append(("CFG_RATE_NAV", 2))
                 
                 msg = UBXMessage.config_set(layer, transaction=0, cfgData=data_list)
                 print(f"Setting data...")
