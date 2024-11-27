@@ -95,7 +95,7 @@ def process_data(queue: Queue, confirm: Queue, stop: Event):
     while not stop.is_set():
         if queue.empty() is False:
             (_, parsed) = queue.get()
-            if parsed.identity[0:4] == "CFG-":
+            if parsed.identity[0:4] == "ACK-":
                 confirm.put(parsed)
                 print(f"Parsed :{parsed}")
             # TODO
