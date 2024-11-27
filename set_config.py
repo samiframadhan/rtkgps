@@ -172,7 +172,6 @@ def main(**kwargs):
                 send_queue.put(msg)
                 while confirm_queue.empty():
                     sleep(1)
-                confirm_queue.queue.clear()
 
                 layer = SET_LAYER_RAM
                 data_list = []
@@ -190,6 +189,7 @@ def main(**kwargs):
                 
                 msg = UBXMessage.config_set(layer, transaction=0, cfgData=data_list)
                 print(f"Setting data...")
+                confirm_queue.queue.clear()
                 send_queue.put(msg)
                 while confirm_queue.empty():
                     sleep(1)
