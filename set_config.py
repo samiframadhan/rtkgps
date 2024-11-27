@@ -98,6 +98,8 @@ def process_data(queue: Queue, confirm: Queue, stop: Event):
             if parsed.identity[0:4] == "ACK-":
                 confirm.put(parsed)
                 print(f"Parsed :{parsed}")
+            if parsed.identity[0:4] == "CFG-":
+                print(f"Parsed :{parsed}")
             # TODO
             queue.task_done()
 
