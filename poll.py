@@ -226,15 +226,13 @@ def broadcast(tcp_server: TCPServer, gps_data_queue: Queue, ntrip_client: GNSSNT
                     fixtype = str(fix)
                 message = f"{lat.pop()},{long.pop()},{height.pop()},{fixtype},{PDOP.pop()},{HDOP.pop()},{VDOP.pop()},{connect}" + "\r\n"
                 last_data = message
-                rate_count += 1
-                seconds = time() - prev_broadcast
-                # seconds = nanoseconds/1000
-                per_sec = rate_count / last_count
-                logger.info(f"{per_sec:.2f} msg per sec")
                 logger.info(f"Broadcasting to tcp clients: {last_data}")
                 tcp_server.broadcast(message=last_data)
-                prev_broadcast = time()
-                logger.info(f"Time delay: {seconds:.2f}")
+                rate_count += 1
+                nanoseconds = time_ns() - last_count
+                seconds = nanoseconds/1000
+                per_sec = rate_count / seconds
+                logger.info(f"{per_sec} msg per sec")
                 
                 gps_data_queue.task_done()
             else:
