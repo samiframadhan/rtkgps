@@ -368,8 +368,8 @@ def main(**kwargs):
                 #         send_queue.put(msg)
                 #         count += 1
                         
-                )
                 # stop_event.set()
+                sleep(1)
 
             except KeyboardInterrupt:  # capture Ctrl-C
                 logger.info("\n\nTerminated by user.")
