@@ -200,7 +200,8 @@ def broadcast(tcp_server: TCPServer, gps_data_queue: Queue, ntrip_client: GNSSNT
     seconds = 0
     while not stop.is_set():
         
-        data_freq = rate_count / seconds
+        if seconds != 0:
+            data_freq = rate_count / seconds
 
         if data_freq <= 1 and last_data != None:
             rate_count += 1
