@@ -86,7 +86,7 @@ def io_data(
                 continue
 
 
-def process_data(queue: Queue, stop: Event):
+def process_data(queue: Queue, confirm: Queue, stop: Event):
     """
     THREADED
     Get UBX data from queue and display.
@@ -95,7 +95,8 @@ def process_data(queue: Queue, stop: Event):
     while not stop.is_set():
         if queue.empty() is False:
             (_, parsed) = queue.get()
-            if parsed.identity == "CFG-VALGET" or parsed.identity == "CFG-VALSET":
+            if parsed.identity[0:4] == "CFG-":
+                confirm.put(parsed)
                 print(f"Parsed :{parsed}")
             # TODO
             queue.task_done()
@@ -115,6 +116,7 @@ def main(**kwargs):
 
         read_queue = Queue()
         send_queue = Queue()
+        confirm_queue = Queue()
         stop_event = Event()
         stop_event.clear()
 
@@ -132,6 +134,7 @@ def main(**kwargs):
             target=process_data,
             args=(
                 read_queue,
+                confirm_queue,
                 stop_event,
             ),
         )
@@ -167,7 +170,8 @@ def main(**kwargs):
                 msg = UBXMessage.config_poll(layer, position, configs)
                 print(f"Polling data...")
                 send_queue.put(msg)
-                sleep(10)
+                while confirm_queue.empty:
+                    sleep(1)
 
                 layer = SET_LAYER_RAM
                 data_list = []
@@ -186,13 +190,15 @@ def main(**kwargs):
                 msg = UBXMessage.config_set(layer, transaction=0, cfgData=data_list)
                 print(f"Setting data...")
                 send_queue.put(msg)
-                sleep(10)
+                while confirm_queue.empty:
+                    sleep(1)
 
                 layer = POLL_LAYER_RAM
                 msg = UBXMessage.config_poll(layer, position, configs)
                 print(f"Polling data...")
                 send_queue.put(msg)
-                sleep(10)
+                while confirm_queue.empty:
+                    sleep(1)
                 # msg = UBXMessage.config_poll(layer, position, configs)
                 # send_queue.put(msg)
                 stop_event.set()
