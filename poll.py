@@ -114,6 +114,7 @@ def process_data(gga_queue: Queue, data_queue: Queue, gps_queue: Queue, stop: Ev
     last_hppos = time()
 
     while not stop.is_set():
+        sleep(1.1)
         try:
             # Attempt to get data from the queue with a small timeout
             (raw_data, parsed) = data_queue.get(timeout=0.1)
@@ -157,7 +158,6 @@ def process_data(gga_queue: Queue, data_queue: Queue, gps_queue: Queue, stop: Ev
             gga_queue.put((raw_data, parsed))
         
         data_queue.task_done()
-        sleep(0.01)
 
         # Ensure all deques have data before putting into gps_queue
         deq = [lat, long, height, fix, PDOP, HDOP, VDOP]
@@ -201,7 +201,6 @@ def broadcast(tcp_server: TCPServer, gps_data_queue: Queue, ntrip_client: GNSSNT
     prev_broadcast = time()
     seconds = 0
     while not stop.is_set():
-        sleep(0.2)
         
         if seconds != 0:
             data_freq = rate_count / seconds
@@ -344,7 +343,7 @@ def main(**kwargs):
                 #     #     msg = UBXMessage("NAV", nam, POLL)
                 #     #     send_queue.put(msg)
                 #     #     count += 1
-                #     #     sleep(1)
+                #     #     
                 #     if nam == "NAV-HPPOSLLH":
                 #         # logger.info(f"Polling {nam} message type...")
                 #         msg = UBXMessage("NAV", nam, POLL)
@@ -369,7 +368,7 @@ def main(**kwargs):
                 #         send_queue.put(msg)
                 #         count += 1
                         
-                sleep(0.2)
+                )
                 # stop_event.set()
 
             except KeyboardInterrupt:  # capture Ctrl-C
