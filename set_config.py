@@ -170,7 +170,7 @@ def main(**kwargs):
                 msg = UBXMessage.config_poll(layer, position, configs)
                 print(f"Polling data...")
                 send_queue.put(msg)
-                while confirm_queue.empty:
+                while confirm_queue.empty():
                     sleep(1)
 
                 layer = SET_LAYER_RAM
@@ -190,14 +190,14 @@ def main(**kwargs):
                 msg = UBXMessage.config_set(layer, transaction=0, cfgData=data_list)
                 print(f"Setting data...")
                 send_queue.put(msg)
-                while confirm_queue.empty:
+                while confirm_queue.empty():
                     sleep(1)
 
                 layer = POLL_LAYER_RAM
                 msg = UBXMessage.config_poll(layer, position, configs)
                 print(f"Polling data...")
                 send_queue.put(msg)
-                while confirm_queue.empty:
+                while confirm_queue.empty():
                     sleep(1)
                 # msg = UBXMessage.config_poll(layer, position, configs)
                 # send_queue.put(msg)
