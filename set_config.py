@@ -95,8 +95,7 @@ def process_data(queue: Queue, stop: Event):
     while not stop.is_set():
         if queue.empty() is False:
             (_, parsed) = queue.get()
-            if parsed.msg_id == "CFG-VALGET" or parsed.msg_id == "CFG-VALSET":
-                print(parsed)
+            print(f"Msg id: {parsed.msg_id}")
             # TODO
             queue.task_done()
 
