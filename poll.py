@@ -195,6 +195,8 @@ def ntrip(gga_queue: Queue, send_queue: Queue, kwargs):
 def broadcast(tcp_server: TCPServer, gps_data_queue: Queue, ntrip_client: GNSSNTRIPClient, stop: Event):
     data_freq = 0
     prev_broadcast = 0
+    last_count = 0
+    rate_count = 0
     last_data = None
     prev_broadcast = time_ns()
     while not stop.is_set():
@@ -224,13 +226,15 @@ def broadcast(tcp_server: TCPServer, gps_data_queue: Queue, ntrip_client: GNSSNT
                     fixtype = str(fix)
                 message = f"{lat.pop()},{long.pop()},{height.pop()},{fixtype},{PDOP.pop()},{HDOP.pop()},{VDOP.pop()},{connect}" + "\r\n"
                 last_data = message
-                seconds = (time_ns() - prev_broadcast)/1000
-                data_freq = 1 / seconds
-                logger.info(f"{data_freq} msg per sec")
+                rate_count += 1
+                nanoseconds = time_ns() - prev_broadcast
+                seconds = nanoseconds/1000
+                per_sec = rate_count / seconds
+                logger.info(f"{per_sec} msg per sec")
                 logger.info(f"Broadcasting to tcp clients: {last_data}")
                 tcp_server.broadcast(message=last_data)
                 prev_broadcast = time_ns()
-                logger.info(f"Timestamp: {seconds}")
+                logger.info(f"Time delay: {seconds}")
                 
                 gps_data_queue.task_done()
             else:
