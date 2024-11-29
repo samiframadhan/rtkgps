@@ -1,20 +1,14 @@
 """
-nmeapoller.py
+poll.py
 
-This example illustrates how to read, write and display NMEA messages
-"concurrently" using threads and queues. This represents a useful
-generic pattern for many end user applications.
+This code designed to do the following things:
+1. Start a tcp server which broadcasts customized data string to each clients that connected to the tcp server
+2. Start an ntrip client that communicates with a VRS NTRIP server
+3. Configure and polling the data from Zed-F9P RTK GPS Module
 
 Usage:
 
-python3 nmeapoller.py port=/dev/ttyACM0 baudrate=38400 timeout=3
-
-It implements two threads which run concurrently:
-1) an I/O thread which continuously reads NMEA data from the
-receiver and sends any queued outbound command or poll messages.
-2) a process thread which processes parsed NMEA data - in this example
-it simply prints the parsed data to the terminal.
-NMEA data is passed between threads using queues.
+python3 poll.py config_file=path_to_config_file.yaml
 
 Press CTRL-C to terminate.
 
@@ -22,11 +16,10 @@ FYI: Since Python implements a Global Interpreter Lock (GIL),
 threads are not strictly concurrent, though this is of minor
 practical consequence here.
 
-Created on 07 Aug 2021
+Created 29 Nov 2024
 
-:author: semuadmin
-:copyright: SEMU Consulting © 2021
-:license: BSD 3-Clause
+:author: Sami Fauzan R
+:license: BSD 3-Clause (following pygnssutils license)
 """
 
 from queue import Queue, Empty
@@ -39,8 +32,17 @@ from collections import deque
 
 from serial import Serial
 
-from pyubx2 import POLL, UBX_PAYLOADS_POLL, UBX_PROTOCOL, NMEA_PROTOCOL, UBXMessage, UBXReader
-from pynmeagps import NMEA_MSGIDS, POLL, NMEAMessage, NMEAReader
+from pyubx2 import (
+    POLL, 
+    SET_LAYER_BBR,
+    SET_LAYER_RAM,
+    UBX_PAYLOADS_POLL, 
+    UBX_PROTOCOL, 
+    NMEA_PROTOCOL, 
+    UBXMessage, 
+    UBXReader
+)
+
 from pygnssutils import VERBOSITY_HIGH, VERBOSITY_DEBUG, set_logging
 
 from ntripclient import GNSSNTRIPClient
@@ -91,7 +93,7 @@ def io_data(
             logger.info(f"\n\nSomething went wrong {err}\n\n")
             continue
 
-def process_data(gga_queue: Queue, data_queue: Queue, gps_queue: Queue, stop: Event):
+def process_data(gga_queue: Queue, confirm_queue: Queue, data_queue: Queue, gps_queue: Queue, stop: Event):
     """
     THREADED
     Get NMEA data from data_queue and process.
@@ -121,6 +123,10 @@ def process_data(gga_queue: Queue, data_queue: Queue, gps_queue: Queue, stop: Ev
             continue
 
         logger.debug(f"Msg: {parsed}")
+
+        if parsed.identity[0:3] == "ACK":
+            confirm_queue.put(parsed.identity)
+
         if hasattr(parsed, "lat"):
             # Check for timeout since last high-precision update
             if time() - last_hppos > timeout:
@@ -258,6 +264,28 @@ def broadcast(tcp_server: TCPServer, gps_data_queue: Queue, ntrip_client: GNSSNT
         #     tcp_server.broadcast(message=last_data)
         #     prev_broadcast = time_ns()
             
+def config():
+    position = 0
+    layer = SET_LAYER_RAM
+    configs = [
+                ("CFG_MSGOUT_NMEA_ID_GSV_USB", 0),
+                ("CFG_MSGOUT_NMEA_ID_GSA_USB", 0),
+                ("CFG_MSGOUT_NMEA_ID_GGA_USB", 1),
+                ("CFG_MSGOUT_NMEA_ID_GLL_USB", 0),
+                ("CFG_MSGOUT_NMEA_ID_VTG_USB", 0),
+                ("CFG_MSGOUT_NMEA_ID_RMC_USB", 0),
+                ("CFG_MSGOUT_UBX_NAV_DOP_USB", 1),
+                ("CFG_MSGOUT_UBX_NAV_HPPOSLLH_USB", 1),
+                ("CFG_MSGOUT_UBX_NAV_POSLLH_USB", 1),
+                ("CFG_MSGOUT_UBX_NAV_STATUS_USB", 1),
+                ("CFG_RATE_MEAS", 100),
+                ("CFG_RATE_NAV", 2),
+            ]
+    msg_ram = UBXMessage.config_set(layer, transaction=0, cfgData=configs)
+    layer = SET_LAYER_BBR
+    msg_bbr = UBXMessage.config_set(layer, transaction=0, cfgData=configs)
+    return msg_ram, msg_bbr
+    
 
 def main(**kwargs):
     """
@@ -276,6 +304,7 @@ def main(**kwargs):
         read_queue = Queue()
         gga_queue = Queue()
         gps_queue = Queue()
+        config_queue = Queue()
         send_queue = Queue()
         stop_event = Event()
 
@@ -303,6 +332,7 @@ def main(**kwargs):
             target=process_data,
             args=(
                 gga_queue,
+                config_queue,
                 read_queue,
                 gps_queue,
                 stop_event,
@@ -329,46 +359,36 @@ def main(**kwargs):
         )
         broadcast_thread.start()
 
+        # Configure the F9P to specific parameter
+        logger.info("Configuring the F9P...")
+        response = ""
+        while response != "ACK-ACK":
+            set_ram, set_bbr = config()
+            send_queue.put(set_bbr)
+            while config_queue.empty():
+                sleep(0.5)
+            response = config_queue.get()
+            if response == "ACK-ACK":
+                logger.info("Configuration to BBR is successful")
+            if response == "ACK-NAK":
+                logger.info("Configuration to BBR is unsuccessful")
+            config_queue.task_done()
+        
+        response = ""
+        while response != "ACK-ACK":
+            send_queue.put(set_ram)
+            while config_queue.empty():
+                sleep(0.5)
+            response = config_queue.get()
+            if response == "ACK-ACK":
+                logger.info("Configuration to RAM is successful")
+            if response == "ACK-NAK":
+                logger.info("Configuration to RAM is unsuccessful")
+            config_queue.task_done()
+
         # loop until user presses Ctrl-C
         while not stop_event.is_set():
             try:
-                # DO STUFF IN THE BACKGROUND...
-                # Poll for each NMEA sentence type.
-                # NB: Your receiver may not support all types. It will return a
-                # GNTXT "NMEA unknown msg" response for any types it doesn't support.
-                # count = 0
-                # for nam in UBX_PAYLOADS_POLL:
-                #     # if nam[0:4] == "NAV-":
-                #     #     print(f"Polling {nam} message type...")
-                #     #     msg = UBXMessage("NAV", nam, POLL)
-                #     #     send_queue.put(msg)
-                #     #     count += 1
-                #     #     
-                #     if nam == "NAV-HPPOSLLH":
-                #         # logger.info(f"Polling {nam} message type...")
-                #         msg = UBXMessage("NAV", nam, POLL)
-                #         send_queue.put(msg)
-                #         count += 1
-                        
-                #     if nam == "NAV-POSLLH":
-                #         # logger.info(f"Polling {nam} message type...")
-                #         msg = UBXMessage("NAV", nam, POLL)
-                #         send_queue.put(msg)
-                #         count += 1
-                        
-                #     if nam == "NAV-DOP":
-                #         # logger.info(f"Polling {nam} message type...")
-                #         msg = UBXMessage("NAV", nam, POLL)
-                #         send_queue.put(msg)
-                #         count += 1
-                        
-                #     if nam == "NAV-STATUS":
-                #         # logger.info(f"Polling {nam} message type...")
-                #         msg = UBXMessage("NAV", nam, POLL)
-                #         send_queue.put(msg)
-                #         count += 1
-                        
-                # stop_event.set()
                 sleep(1)
 
             except KeyboardInterrupt:  # capture Ctrl-C
