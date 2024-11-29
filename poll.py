@@ -364,8 +364,12 @@ def main(**kwargs):
         while response != "ACK-ACK":
             set_ram, set_bbr = config()
             send_queue.put(set_bbr)
+            tries = 0
             while config_queue.empty():
+                tries += 1
                 sleep(0.5)
+                if tries >= 5:
+                    break
             response = config_queue.get()
             if response == "ACK-ACK":
                 logger.info("Configuration to BBR is successful")
@@ -376,8 +380,12 @@ def main(**kwargs):
         response = ""
         while response != "ACK-ACK":
             send_queue.put(set_ram)
+            tries = 0
             while config_queue.empty():
+                tries += 1
                 sleep(0.5)
+                if tries >= 5:
+                    break
             response = config_queue.get()
             if response == "ACK-ACK":
                 logger.info("Configuration to RAM is successful")
