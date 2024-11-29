@@ -1,0 +1,12 @@
+[project]
+name = "F9POps"
+version = "0.1"
+description = "This program designed to do the following things: Start a tcp server, Start an ntrip client, Configure and polling the data from Zed-F9P RTK GPS Module"
+
+[tool.cxfreeze]
+executables = [
+    {script = "poll.py"}
+]
+
+[tool.cxfreeze.build_exe]
+include_files=["tcp.py", "ntripclient.py"]
