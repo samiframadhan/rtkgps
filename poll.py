@@ -265,7 +265,6 @@ def broadcast(tcp_server: TCPServer, gps_data_queue: Queue, ntrip_client: GNSSNT
         #     prev_broadcast = time_ns()
             
 def config():
-    position = 0
     layer = SET_LAYER_RAM
     configs = [
                 ("CFG_MSGOUT_NMEA_ID_GSV_USB", 0),
