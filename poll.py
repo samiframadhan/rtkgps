@@ -367,7 +367,7 @@ def main(**kwargs):
             tries = 0
             while config_queue.empty():
                 tries += 1
-                sleep(0.5)
+                sleep(1)
                 if tries >= 5:
                     break
             response = config_queue.get()
@@ -383,7 +383,7 @@ def main(**kwargs):
             tries = 0
             while config_queue.empty():
                 tries += 1
-                sleep(0.5)
+                sleep(1)
                 if tries >= 5:
                     break
             response = config_queue.get()
