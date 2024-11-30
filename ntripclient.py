@@ -434,7 +434,7 @@ class GNSSNTRIPClient:
             if not gga_data.empty():
                 gga, _ = gga_data.get()
                 self._prev_gga = (gga, _)
-                self.logger.info(f"gga data: {_}")
+                self.logger.debug(f"gga data: {_}")
                 gga_data.task_done()
             else:
                 if self._prev_gga is not None:
@@ -666,7 +666,7 @@ class GNSSNTRIPClient:
                 if not gga_data.empty():
                     raw_data, parsed_data = gga_data.get()
                     self._prev_gga = (raw_data, parsed_data)
-                    self.logger.info(f"gga data: {parsed_data}")
+                    self.logger.debug(f"gga data: {parsed_data}")
                     gga_data.task_done()
                 else:
                     if self._prev_gga is not None:
