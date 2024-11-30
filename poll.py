@@ -403,6 +403,10 @@ def main(**kwargs):
         # loop until user presses Ctrl-C
         while not stop_event.is_set():
             try:
+                #monitor ntrip client connection; rerun the client when it's disconnected
+                if ntrip_client.connected != True:
+                    ntrip_client = ntrip_client(gga_queue, send_queue, kwargs)
+                    sleep(1)
                 sleep(1)
 
             except KeyboardInterrupt:  # capture Ctrl-C
