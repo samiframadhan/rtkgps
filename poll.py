@@ -49,7 +49,7 @@ from ntripclient import GNSSNTRIPClient
 from tcp import TCPServer
 
 logger = getLogger("rtkgps")
-# set_logging(getLogger("ntripclient"), VERBOSITY_HIGH)
+set_logging(getLogger("ntripclient"), VERBOSITY_HIGH)
 set_logging(getLogger("tcp"), VERBOSITY_HIGH)
 set_logging(getLogger("rtkgps"), VERBOSITY_HIGH)
 poll_str = ["GGA", "GLL", "GNS", "LR2", "MOB", "RMA", "RMB", "RMC", "TRF", "WPL", "BWC", "BWR"]
