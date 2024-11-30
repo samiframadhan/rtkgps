@@ -248,7 +248,7 @@ def broadcast(tcp_server: TCPServer, gps_data_queue: Queue, ntrip_client: GNSSNT
                     fixtype = "Float"
                 else:
                     fixtype = str(fix)
-                message = f"{lat.pop()},{long.pop()},{height_m:.5f},{fixtype},{PDOP.pop()},{HDOP.pop()},{VDOP.pop()},{connect}" + "\r\n"
+                message = f"{lat.pop()},{long.pop()},{height_m:.4f},{fixtype},{PDOP.pop()},{HDOP.pop()},{VDOP.pop()},{connect}" + "\r\n"
                 last_data = message
                 logger.info(f"Broadcasting to tcp clients: {last_data}")
                 tcp_server.broadcast(message=last_data)
