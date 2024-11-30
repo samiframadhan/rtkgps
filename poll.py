@@ -174,7 +174,7 @@ def process_data(gga_queue: Queue, confirm_queue: Queue, data_queue: Queue, gps_
                 count = 1
         
         if count == 0:
-            gps_queue.put((lat, long, height, fix, PDOP, HDOP, VDOP))
+            gps_queue.put(((lat, long, height, fix, PDOP, HDOP, VDOP),hppos))
                 
 def ntrip(gga_queue: Queue, send_queue: Queue, kwargs):
     server = kwargs.get("server", "69.64.185.41")
@@ -221,15 +221,20 @@ def broadcast(tcp_server: TCPServer, gps_data_queue: Queue, ntrip_client: GNSSNT
 
         elif not gps_data_queue.empty():
             connect = "ON" if ntrip_client.connected == True else "OFF"
-            lat, long, height, fix, PDOP, HDOP, VDOP = gps_data_queue.get()
-            lis = [lat, long, height, fix, PDOP, HDOP, VDOP]
+            gps, hppos = gps_data_queue.get()
+            lat, long, height, fix, PDOP, HDOP, VDOP = gps
             count = 0
-            for val in lis:
+            for val in gps:
                 if len(val) == 0:
                     count = 1
 
             if count == 0:
-                height = height/1000
+                if hppos:
+                    height_m = height.pop()
+                    height_m = height_m/1000 #Convert mm to meter
+                else:
+                    height_m = height.pop()
+                    
                 type = fix.pop()
                 if type == 1:
                     fixtype = "GPS"
@@ -243,7 +248,7 @@ def broadcast(tcp_server: TCPServer, gps_data_queue: Queue, ntrip_client: GNSSNT
                     fixtype = "Float"
                 else:
                     fixtype = str(fix)
-                message = f"{lat.pop()},{long.pop()},{height.pop()},{fixtype},{PDOP.pop()},{HDOP.pop()},{VDOP.pop()},{connect}" + "\r\n"
+                message = f"{lat.pop()},{long.pop()},{height_m},{fixtype},{PDOP.pop()},{HDOP.pop()},{VDOP.pop()},{connect}" + "\r\n"
                 last_data = message
                 logger.info(f"Broadcasting to tcp clients: {last_data}")
                 tcp_server.broadcast(message=last_data)
