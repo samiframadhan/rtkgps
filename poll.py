@@ -136,12 +136,13 @@ def process_data(gga_queue: Queue, confirm_queue: Queue, data_queue: Queue, gps_
             if hasattr(parsed, "invalidLlh") and parsed.invalidLlh != 1:
                 lat.append(parsed.lat)
                 long.append(parsed.lon)
-                height.append(parsed.height)
+                height.append(parsed.hMSL)
                 hppos = True
                 last_hppos = time()
             elif not hppos:  # Use less precise data after timeout
                 lat.append(parsed.lat)
                 long.append(parsed.lon)
+                height.append(parsed.hMSL)
 
         # Update DOP values if available
         if hasattr(parsed, "pDOP"):
