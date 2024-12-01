@@ -139,7 +139,7 @@ def process_data(gga_queue: Queue, confirm_queue: Queue, data_queue: Queue, gps_
                 height.append(parsed.hMSL)
                 hppos = True
                 last_hppos = time()
-            elif not hppos:  # Use less precise data after timeout
+            elif not hppos and hasattr(parsed, "hMSL"):  # Use less precise data after timeout
                 lat.append(parsed.lat)
                 long.append(parsed.lon)
                 height.append(parsed.hMSL)
