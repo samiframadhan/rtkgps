@@ -216,7 +216,7 @@ def broadcast(tcp_server: TCPServer, gps_data_queue: Queue, ntrip_client: GNSSNT
                     count = 1
 
             if count == 0:
-                height_m = height.pop()
+                height_m = height.pop() / 1000
                     
                 type = fix.pop()
                 if type == 1:
