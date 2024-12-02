@@ -168,7 +168,7 @@ def process_data(gga_queue: Queue, confirm_queue: Queue, data_queue: Queue, gps_
         if count == 0:
             gps_queue.put((lat, long, height, fix, numSV, heading, PDOP, HDOP, VDOP))
                 
-def ntrip(gga_queue: Queue, send_queue: Queue, kwargs):
+def ntrip(gga_queue: Queue, send_queue: Queue, stop: Event, kwargs):
     server = kwargs.get("server", "69.64.185.41")
     port = int(kwargs.get("port", 7801))
     mountpoint = kwargs.get("mountpoint", "MSM4")
@@ -187,6 +187,7 @@ def ntrip(gga_queue: Queue, send_queue: Queue, kwargs):
         ggainterval=1,
         gga_data=gga_queue,
         output=send_queue,
+        stopevent=stop
     )
     
     return gnc
@@ -339,7 +340,7 @@ def main(**kwargs):
         process_thread.start()
 
         logger.info("Starting ntrip thread...")
-        ntrip_client = ntrip(gga_queue, send_queue, kwargs)
+        ntrip_client = ntrip(gga_queue, send_queue, stop_event, kwargs)
 
         logger.info("Starting broadcast thread...")
         broadcast_thread = Thread(
