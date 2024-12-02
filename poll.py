@@ -264,7 +264,7 @@ def config():
                 ("CFG_MSGOUT_NMEA_ID_VTG_USB", 0),
                 ("CFG_MSGOUT_NMEA_ID_RMC_USB", 0),
                 ("CFG_MSGOUT_UBX_NAV_DOP_USB", 1),
-                ("CFG_MSGOUT_UBX_NAV_HPPOSLLH_USB", 0),
+                ("CFG_MSGOUT_UBX_NAV_HPPOSLLH_USB", 1),
                 ("CFG_MSGOUT_UBX_NAV_POSLLH_USB", 0),
                 ("CFG_MSGOUT_UBX_NAV_STATUS_USB", 0),
                 ("CFG_MSGOUT_UBX_NAV_PVT_USB", 1),
