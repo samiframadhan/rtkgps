@@ -52,8 +52,6 @@ logger = getLogger("rtkgps")
 set_logging(getLogger("ntripclient"), VERBOSITY_HIGH)
 set_logging(getLogger("tcp"), VERBOSITY_HIGH)
 set_logging(getLogger("rtkgps"), VERBOSITY_HIGH)
-poll_str = ["GGA", "GLL", "GNS", "LR2", "MOB", "RMA", "RMB", "RMC", "TRF", "WPL", "BWC", "BWR"]
-only_gga = ["GGA"]
 
 def io_data(
     stream: object,
@@ -104,16 +102,14 @@ def process_data(gga_queue: Queue, confirm_queue: Queue, data_queue: Queue, gps_
     long = deque(maxlen=1)
     height = deque(maxlen=1)
     fix = deque(maxlen=1)
+    numSV = deque(maxlen=1)
+    heading = deque(maxlen=1)
     PDOP = deque(maxlen=1)
     HDOP = deque(maxlen=1)
     VDOP = deque(maxlen=1)
     last_pdop = 0
     last_hdop = 0
     last_vdop = 0
-
-    hppos = False
-    timeout = 1  # Timeout in seconds
-    last_hppos = time()
 
     while not stop.is_set():
         try:
@@ -124,49 +120,41 @@ def process_data(gga_queue: Queue, confirm_queue: Queue, data_queue: Queue, gps_
 
         logger.debug(f"Msg: {parsed}")
 
-        if parsed.identity[0:3] == "ACK":
-            confirm_queue.put(parsed.identity)
-
-        if hasattr(parsed, "lat"):
-            # Check for timeout since last high-precision update
-            if time() - last_hppos > timeout:
-                hppos = False
-
-            # Update with high-precision data if valid
-            if hasattr(parsed, "invalidLlh") and parsed.invalidLlh != 1:
-                lat.append(parsed.lat)
-                long.append(parsed.lon)
-                height.append(parsed.hMSL)
-                hppos = True
-                last_hppos = time()
-            elif not hppos and hasattr(parsed, "hMSL"):  # Use less precise data after timeout
-                lat.append(parsed.lat)
-                long.append(parsed.lon)
-                height.append(parsed.hMSL)
-
-        # Update DOP values if available
-        if hasattr(parsed, "pDOP"):
-            PDOP.append(parsed.pDOP)
-            HDOP.append(parsed.hDOP)
-            VDOP.append(parsed.vDOP)
-            last_pdop = parsed.pDOP
-            last_hdop = parsed.hDOP
-            last_vdop = parsed.vDOP
-        else:
-            PDOP.append(last_pdop)
-            HDOP.append(last_hdop)
-            VDOP.append(last_vdop)
-
         # Handle GGA messages
         if hasattr(parsed, "msgID") and parsed.msgID == "GGA":
             logger.info(f"Fix type: {parsed.quality}")
             fix.append(parsed.quality)
             gga_queue.put((raw_data, parsed))
+
+        else:
+            if parsed.identity[0:3] == "ACK":
+                confirm_queue.put(parsed.identity)
+
+            if parsed.identity == "NAV-PVT":
+                lat.append(parsed.lat)
+                long.append(parsed.lon)
+                height.append(parsed.hMSL)
+                numSV.append(parsed.numSV)
+                heading.append(parsed.headVeh)
+
+            # Update DOP values if available
+            if parsed.identity == "NAV-DOP":
+                PDOP.append(parsed.pDOP)
+                HDOP.append(parsed.hDOP)
+                VDOP.append(parsed.vDOP)
+                last_pdop = parsed.pDOP
+                last_hdop = parsed.hDOP
+                last_vdop = parsed.vDOP
+            else:
+                PDOP.append(last_pdop)
+                HDOP.append(last_hdop)
+                VDOP.append(last_vdop)
+
         
         data_queue.task_done()
 
         # Ensure all deques have data before putting into gps_queue
-        deq = [lat, long, height, fix, PDOP, HDOP, VDOP]
+        deq = [lat, long, height, fix, numSV, heading, PDOP, HDOP, VDOP]
         
         count = 0
         for val in deq:
@@ -174,7 +162,7 @@ def process_data(gga_queue: Queue, confirm_queue: Queue, data_queue: Queue, gps_
                 count = 1
         
         if count == 0:
-            gps_queue.put(((lat, long, height, fix, PDOP, HDOP, VDOP),hppos))
+            gps_queue.put((lat, long, height, fix, numSV, heading, PDOP, HDOP, VDOP))
                 
 def ntrip(gga_queue: Queue, send_queue: Queue, kwargs):
     server = kwargs.get("server", "69.64.185.41")
@@ -221,8 +209,7 @@ def broadcast(tcp_server: TCPServer, gps_data_queue: Queue, ntrip_client: GNSSNT
 
         elif not gps_data_queue.empty():
             connect = "ON" if ntrip_client.connected == True else "OFF"
-            gps, hppos = gps_data_queue.get()
-            lat, long, height, fix, PDOP, HDOP, VDOP = gps
+            lat, long, height, fix, numSV, heading, PDOP, HDOP, VDOP = gps_data_queue.get()
             count = 0
             for val in gps:
                 if len(val) == 0:
@@ -248,7 +235,7 @@ def broadcast(tcp_server: TCPServer, gps_data_queue: Queue, ntrip_client: GNSSNT
                     fixtype = "Float"
                 else:
                     fixtype = str(fix)
-                message = f"{lat.pop()},{long.pop()},{height_m:.4f},{fixtype},{PDOP.pop()},{HDOP.pop()},{VDOP.pop()},{connect}" + "\r\n"
+                message = f"{lat.pop()},{long.pop()},{height_m:.4f},{fixtype},{numSV.pop()},{PDOP.pop()},{HDOP.pop()},{VDOP.pop()},{heading.pop()},{connect}" + "\r\n"
                 last_data = message
                 logger.info(f"Broadcasting to tcp clients: {last_data}")
                 tcp_server.broadcast(message=last_data)
@@ -281,10 +268,11 @@ def config():
                 ("CFG_MSGOUT_NMEA_ID_VTG_USB", 0),
                 ("CFG_MSGOUT_NMEA_ID_RMC_USB", 0),
                 ("CFG_MSGOUT_UBX_NAV_DOP_USB", 1),
-                ("CFG_MSGOUT_UBX_NAV_HPPOSLLH_USB", 1),
-                ("CFG_MSGOUT_UBX_NAV_POSLLH_USB", 1),
-                ("CFG_MSGOUT_UBX_NAV_STATUS_USB", 1),
-                ("CFG_RATE_MEAS", 100),
+                ("CFG_MSGOUT_UBX_NAV_HPPOSLLH_USB", 0),
+                ("CFG_MSGOUT_UBX_NAV_POSLLH_USB", 0),
+                ("CFG_MSGOUT_UBX_NAV_STATUS_USB", 0),
+                ("CFG_MSGOUT_UBX_NAV_PVT_USB", 1),
+                ("CFG_RATE_MEAS", 80),
                 ("CFG_RATE_NAV", 2),
             ]
     msg_ram = UBXMessage.config_set(layer, transaction=0, cfgData=configs)
