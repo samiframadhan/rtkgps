@@ -138,12 +138,13 @@ def process_data(gga_queue: Queue, confirm_queue: Queue, data_queue: Queue, gps_
                 long.append(parsed.lon)
                 height.append(parsed.hMSL)
                 # numSV.append(parsed.numSV)
-                heading.append(parsed.headVeh)
+                # heading.append(parsed.headVeh)
                 hppos = True
 
             if parsed.identity == "NAV-PVT":
-                lat.append(parsed.lat)
-                long.append(parsed.lon)
+                if not hppos:
+                    lat.append(parsed.lat)
+                    long.append(parsed.lon)
                 height.append(parsed.hMSL)
                 heading.append(parsed.headVeh)
 
