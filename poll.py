@@ -126,6 +126,7 @@ def process_data(gga_queue: Queue, confirm_queue: Queue, data_queue: Queue, gps_
             logger.info(f"Fix type: {parsed.quality}")
             fix.append(parsed.quality)
             gga_queue.put((raw_data, parsed))
+            numSV.append(parsed.numSV)
 
         else:
             if parsed.identity[0:3] == "ACK":
@@ -136,7 +137,7 @@ def process_data(gga_queue: Queue, confirm_queue: Queue, data_queue: Queue, gps_
                 lat.append(parsed.lat)
                 long.append(parsed.lon)
                 height.append(parsed.hMSL)
-                numSV.append(parsed.numSV)
+                # numSV.append(parsed.numSV)
                 heading.append(parsed.headVeh)
                 hppos = True
 
@@ -144,7 +145,6 @@ def process_data(gga_queue: Queue, confirm_queue: Queue, data_queue: Queue, gps_
                 lat.append(parsed.lat)
                 long.append(parsed.lon)
                 height.append(parsed.hMSL)
-                numSV.append(parsed.numSV)
                 heading.append(parsed.headVeh)
 
             # Update DOP values if available
