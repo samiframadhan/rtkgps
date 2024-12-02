@@ -133,7 +133,6 @@ def process_data(gga_queue: Queue, confirm_queue: Queue, data_queue: Queue, gps_
                 confirm_queue.put(parsed.identity)
 
             if parsed.identity == "NAV-HPPOSLLH":
-                logger.info(f"Valid?: {parsed.invalidLlh}")
                 lat.append(parsed.lat)
                 long.append(parsed.lon)
                 height.append(parsed.hMSL)
@@ -143,8 +142,8 @@ def process_data(gga_queue: Queue, confirm_queue: Queue, data_queue: Queue, gps_
                 if not hppos:
                     lat.append(parsed.lat)
                     long.append(parsed.lon)
-                height.append(parsed.hMSL)
-                heading.append(parsed.headVeh)
+                    height.append(parsed.hMSL)
+                heading.append(parsed.headMot)
 
             # Update DOP values if available
             if parsed.identity == "NAV-DOP":
