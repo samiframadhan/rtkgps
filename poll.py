@@ -211,7 +211,7 @@ def broadcast(tcp_server: TCPServer, gps_data_queue: Queue, ntrip_client: GNSSNT
             connect = "ON" if ntrip_client.connected == True else "OFF"
             lat, long, height, fix, numSV, heading, PDOP, HDOP, VDOP = gps_data_queue.get()
             count = 0
-            for val in gps:
+            for val in lat, long, height, fix, numSV, heading, PDOP, HDOP, VDOP:
                 if len(val) == 0:
                     count = 1
 
