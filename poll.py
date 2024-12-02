@@ -110,7 +110,6 @@ def process_data(gga_queue: Queue, confirm_queue: Queue, data_queue: Queue, gps_
     last_pdop = 0
     last_hdop = 0
     last_vdop = 0
-    # hppos = False
 
     while not stop.is_set():
         try:
@@ -132,17 +131,14 @@ def process_data(gga_queue: Queue, confirm_queue: Queue, data_queue: Queue, gps_
             if parsed.identity[0:3] == "ACK":
                 confirm_queue.put(parsed.identity)
 
+            # Update heading motion values if available
             if parsed.identity == "NAV-HPPOSLLH":
                 lat.append(parsed.lat)
                 long.append(parsed.lon)
                 height.append(parsed.hMSL)
-                # hppos = True
 
+            # Update heading motion values if available
             if parsed.identity == "NAV-PVT":
-                # if not hppos:
-                #     lat.append(parsed.lat)
-                #     long.append(parsed.lon)
-                #     height.append(parsed.hMSL)
                 heading.append(parsed.headMot)
 
             # Update DOP values if available
@@ -171,8 +167,6 @@ def process_data(gga_queue: Queue, confirm_queue: Queue, data_queue: Queue, gps_
         
         if count == 0:
             gps_queue.put((lat, long, height, fix, numSV, heading, PDOP, HDOP, VDOP))
-            #Reset hppos status
-            # hppos = False
                 
 def ntrip(gga_queue: Queue, send_queue: Queue, kwargs):
     server = kwargs.get("server", "69.64.185.41")
