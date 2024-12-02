@@ -29,6 +29,7 @@ from threading import Event, Thread
 from time import sleep, time, time_ns
 from logging import getLogger
 from collections import deque
+from decimal import Decimal, getcontext
 
 from serial import Serial
 
@@ -47,6 +48,8 @@ from pygnssutils import VERBOSITY_HIGH, VERBOSITY_DEBUG, set_logging
 
 from ntripclient import GNSSNTRIPClient
 from tcp import TCPServer
+
+getcontext().prec = 9
 
 logger = getLogger("rtkgps")
 set_logging(getLogger("ntripclient"), VERBOSITY_HIGH)
@@ -222,8 +225,8 @@ def broadcast(tcp_server: TCPServer, gps_data_queue: Queue, ntrip_client: GNSSNT
 
             if count == 0:
                 height_m = height.pop() / 1000
-                long_data = long.pop()
-                lat_data = lat.pop()
+                long_data = Decimal(long.pop())
+                lat_data = Decimal(lat.pop())
                     
                 type = fix.pop()
                 if type == 1:
