@@ -255,6 +255,7 @@ class GNSSNTRIPClient:
                     self.logger.info("waiting for 1st gga data")
                     while gga_data.empty():
                         self._retrycount += 1
+                        errm = str(repr(err))
                         errm += (
                             f". Retrying in {self._retryinterval * (2**self._retrycount)} secs "
                             f"({self._retrycount}/{self._retries}) ..."
