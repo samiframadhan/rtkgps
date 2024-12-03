@@ -158,6 +158,7 @@ def main(**kwargs):
                 msg = None
                 
                 position = 0
+                
                 layer = POLL_LAYER_RAM  # volatile memory
                 configs = [
                         "CFG_MSGOUT_NMEA_ID_GSV_USB",
@@ -176,18 +177,21 @@ def main(**kwargs):
                     sleep(1)
 
                 layer = SET_LAYER_RAM
-                data_list = []
-                
-                for msg in configs:
-                    data_list.append((msg, 0))
-
-                data_list.append(("CFG_MSGOUT_NMEA_ID_GGA_USB", 1))
-                data_list.append(("CFG_MSGOUT_UBX_NAV_DOP_USB", 1))
-                data_list.append(("CFG_MSGOUT_UBX_NAV_HPPOSLLH_USB", 1))
-                data_list.append(("CFG_MSGOUT_UBX_NAV_POSLLH_USB", 1))
-                data_list.append(("CFG_MSGOUT_UBX_NAV_STATUS_USB", 1))
-                data_list.append(("CFG_RATE_MEAS", 100))
-                data_list.append(("CFG_RATE_NAV", 2))
+                configs = [
+                            ("CFG_MSGOUT_NMEA_ID_GSV_USB", 0),
+                            ("CFG_MSGOUT_NMEA_ID_GSA_USB", 0),
+                            ("CFG_MSGOUT_NMEA_ID_GGA_USB", 1),
+                            ("CFG_MSGOUT_NMEA_ID_GLL_USB", 0),
+                            ("CFG_MSGOUT_NMEA_ID_VTG_USB", 0),
+                            ("CFG_MSGOUT_NMEA_ID_RMC_USB", 0),
+                            ("CFG_MSGOUT_UBX_NAV_DOP_USB", 1),
+                            ("CFG_MSGOUT_UBX_NAV_HPPOSLLH_USB", 1),
+                            ("CFG_MSGOUT_UBX_NAV_POSLLH_USB", 0),
+                            ("CFG_MSGOUT_UBX_NAV_STATUS_USB", 0),
+                            ("CFG_MSGOUT_UBX_NAV_PVT_USB", 1),
+                            ("CFG_RATE_MEAS", 80),
+                            ("CFG_RATE_NAV", 2),
+                        ]
                 
                 msg = UBXMessage.config_set(layer, transaction=0, cfgData=data_list)
                 print(f"Setting data...")
