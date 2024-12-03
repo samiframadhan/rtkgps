@@ -254,7 +254,15 @@ class GNSSNTRIPClient:
                 if self._first_request:
                     self.logger.info("waiting for 1st gga data")
                     while gga_data.empty():
+                        self._retrycount += 1
+                        errm += (
+                            f". Retrying in {self._retryinterval * (2**self._retrycount)} secs "
+                            f"({self._retrycount}/{self._retries}) ..."
+                        )
+                        self._app_update_status(True, (errm, "red"))
                         sleep(1)
+                        if self._retrycount >= self._retries:
+                            self.stop()
                     self._first_request = False
                 sock = self._open_connection(settings)
                 if not self._do_request(sock, settings, stopevent, gga_data, output):
