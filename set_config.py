@@ -177,7 +177,7 @@ def main(**kwargs):
                     sleep(1)
 
                 layer = SET_LAYER_RAM
-                configs = [
+                data_list = [
                             ("CFG_MSGOUT_NMEA_ID_GSV_USB", 0),
                             ("CFG_MSGOUT_NMEA_ID_GSA_USB", 0),
                             ("CFG_MSGOUT_NMEA_ID_GGA_USB", 1),
