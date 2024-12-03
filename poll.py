@@ -55,6 +55,7 @@ logger = getLogger("rtkgps")
 set_logging(getLogger("ntripclient"), VERBOSITY_HIGH)
 set_logging(getLogger("tcp"), VERBOSITY_HIGH)
 set_logging(getLogger("rtkgps"), VERBOSITY_HIGH)
+RETRY_INTERVAL = 2
 
 def io_data(
     stream: object,
@@ -287,6 +288,18 @@ def config():
     msg_bbr = UBXMessage.config_set(layer, transaction=0, cfgData=configs)
     return msg_ram, msg_bbr
     
+def connect_to_serial(port, baudrate, timeout):
+    """
+    Attempts to connect to the serial port with retry logic.
+    """
+    while True:
+        try:
+            logger.info(f"Attempting to connect to {port}...")
+            return Serial(port, baudrate, timeout=timeout)
+        except Exception as e:
+            logger.error(f"Connection to {port} failed: {e}")
+            logger.info(f"Retrying in {RETRY_INTERVAL} seconds...")
+            time.sleep(RETRY_INTERVAL)
 
 def main(**kwargs):
     """
@@ -297,7 +310,7 @@ def main(**kwargs):
     baudrate = int(kwargs.get("baudrate", 57600))
     timeout = float(kwargs.get("timeout", 1))
 
-    with Serial(port, baudrate, timeout=timeout) as serial_stream:
+    with connect_to_serial(port, baudrate, timeout=timeout) as serial_stream:
         ubxreader = UBXReader(
             serial_stream, 
             protfilter= UBX_PROTOCOL | NMEA_PROTOCOL)
