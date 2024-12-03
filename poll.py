@@ -52,7 +52,7 @@ from tcp import TCPServer
 getcontext().prec = 9
 
 logger = getLogger("rtkgps")
-set_logging(getLogger("ntripclient"), VERBOSITY_HIGH)
+set_logging(getLogger("ntripclient"), VERBOSITY_DEBUG)
 set_logging(getLogger("tcp"), VERBOSITY_HIGH)
 set_logging(getLogger("rtkgps"), VERBOSITY_HIGH)
 RETRY_INTERVAL = 2
