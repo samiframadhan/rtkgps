@@ -294,6 +294,7 @@ class GNSSNTRIPClient:
                     errc += f" - try adding the NTRIP caster URL SSL certificate to {findcacerts()}"
             except OSError:  # socket already closed, ignore
                 errc = "socket closed"
+                self.stop()
             except Exception as err:  # pylint: disable=broad-exception-caught
                 errc = str(repr(err))
 
