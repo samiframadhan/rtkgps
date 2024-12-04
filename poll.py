@@ -436,6 +436,11 @@ def main(**kwargs):
                         if response == "ACK-NAK":
                             logger.info("Configuration to RAM is unsuccessful")
                         config_queue.task_done()
+                    
+                    if config_success == 3:
+                        f9p_ready = True
+                    else:
+                        config_success = 0
 
                 #monitor ntrip client connection; rerun the client when it's disconnected
                 if ntrip_client.connected != True:
