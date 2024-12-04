@@ -37,6 +37,7 @@ from pyubx2 import (
     POLL, 
     SET_LAYER_BBR,
     SET_LAYER_RAM,
+    SET_LAYER_FLASH,
     UBX_PAYLOADS_POLL, 
     UBX_PROTOCOL, 
     NMEA_PROTOCOL, 
@@ -286,7 +287,9 @@ def config():
     msg_ram = UBXMessage.config_set(layer, transaction=0, cfgData=configs)
     layer = SET_LAYER_BBR
     msg_bbr = UBXMessage.config_set(layer, transaction=0, cfgData=configs)
-    return msg_ram, msg_bbr
+    layer = SET_LAYER_FLASH
+    msg_flash = UBXMessage.config_set(layer, transaction=0, cfgData=configs)
+    return msg_ram, msg_bbr, msg_flash
     
 def connect_to_serial(port, baudrate, timeout):
     """
@@ -375,9 +378,9 @@ def main(**kwargs):
 
         # Configure the F9P to specific parameter
         logger.info("Configuring the F9P...")
+        set_ram, set_bbr, set_flash = config()
         response = ""
         while response != "ACK-ACK":
-            set_ram, set_bbr = config()
             send_queue.put(set_bbr)
             tries = 0
             while config_queue.empty():
@@ -390,6 +393,22 @@ def main(**kwargs):
                 logger.info("Configuration to BBR is successful")
             if response == "ACK-NAK":
                 logger.info("Configuration to BBR is unsuccessful")
+            config_queue.task_done()
+
+        response = ""
+        while response != "ACK-ACK":
+            send_queue.put(set_flash)
+            tries = 0
+            while config_queue.empty():
+                tries += 1
+                sleep(1)
+                if tries >= 5:
+                    break
+            response = config_queue.get()
+            if response == "ACK-ACK":
+                logger.info("Configuration to Flash is successful")
+            if response == "ACK-NAK":
+                logger.info("Configuration to Flash is unsuccessful")
             config_queue.task_done()
         
         response = ""

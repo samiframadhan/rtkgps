@@ -255,7 +255,7 @@ class GNSSNTRIPClient:
                     self.logger.info("waiting for 1st gga data")
                     while gga_data.empty():
                         self._retrycount += 1
-                        sleep(1)
+                        sleep(0.1)
                         if self._retrycount >= self._retries:
                             self.stop()
                     self._first_request = False
