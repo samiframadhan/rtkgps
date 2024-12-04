@@ -300,6 +300,7 @@ class GNSSNTRIPClient:
                 self.stop()
             except Exception as err:  # pylint: disable=broad-exception-caught
                 errc = str(repr(err))
+                self.stop()
 
             if errc != "":  # break connection on critical error
                 self.stop()
