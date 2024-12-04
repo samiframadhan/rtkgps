@@ -361,6 +361,9 @@ def main(**kwargs):
         io_thread.start()
         logger.info("Starting process thread...")
         process_thread.start()
+
+        logger.info("Starting ntrip client thread...")
+        ntrip_client = ntrip(gga_queue=gga_queue, send_queue=send_queue, stop=stop_event, kwargs=kwargs)
     
         broadcast_thread = Thread(
             target=broadcast,
@@ -371,10 +374,11 @@ def main(**kwargs):
                 stop_event
             )
         )
+        logger.info("Starting broadcast thread...")
+        broadcast_thread.start()
 
         f9p_ready = False
         config_success = 0
-        configured = False
 
         # loop until user presses Ctrl-C
         while not stop_event.is_set():
@@ -438,12 +442,6 @@ def main(**kwargs):
                     if config_success == 3:
                         f9p_ready = True
                         sleep(0.5)
-                        if not configured:
-                            logger.info("Starting broadcast thread...")
-                            broadcast_thread.start()
-                            logger.info("Starting ntrip client thread...")
-                            ntrip_client = ntrip(gga_queue=gga_queue, send_queue=send_queue, stop=stop_event, kwargs=kwargs)
-                            configured = True
                     else:
                         config_success = 0
 
