@@ -386,23 +386,7 @@ def main(**kwargs):
                     # Configure the F9P to specific parameter
                     logger.info("Configuring the F9P...")
                     set_ram, set_bbr, set_flash = config()
-                    response = ""
-                    while response != "ACK-ACK":
-                        send_queue.put(set_bbr)
-                        tries = 0
-                        while config_queue.empty():
-                            tries += 1
-                            sleep(1)
-                            if tries >= 5:
-                                break
-                        response = config_queue.get()
-                        if response == "ACK-ACK":
-                            logger.info("Configuration to BBR is successful")
-                            config_success += 1
-                        if response == "ACK-NAK":
-                            logger.info("Configuration to BBR is unsuccessful")
-                        config_queue.task_done()
-
+                    
                     response = ""
                     while response != "ACK-ACK":
                         send_queue.put(set_flash)
@@ -422,6 +406,23 @@ def main(**kwargs):
                     
                     response = ""
                     while response != "ACK-ACK":
+                        send_queue.put(set_bbr)
+                        tries = 0
+                        while config_queue.empty():
+                            tries += 1
+                            sleep(1)
+                            if tries >= 5:
+                                break
+                        response = config_queue.get()
+                        if response == "ACK-ACK":
+                            logger.info("Configuration to BBR is successful")
+                            config_success += 1
+                        if response == "ACK-NAK":
+                            logger.info("Configuration to BBR is unsuccessful")
+                        config_queue.task_done()
+                        
+                    response = ""
+                    while response != "ACK-ACK":
                         send_queue.put(set_ram)
                         tries = 0
                         while config_queue.empty():
@@ -439,7 +440,7 @@ def main(**kwargs):
                     
                     if config_success == 3:
                         f9p_ready = True
-                        sleep(1)
+                        sleep(0.5)
                     else:
                         config_success = 0
 
