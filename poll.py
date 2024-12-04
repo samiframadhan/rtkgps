@@ -376,60 +376,65 @@ def main(**kwargs):
         )
         broadcast_thread.start()
 
-        # Configure the F9P to specific parameter
-        logger.info("Configuring the F9P...")
-        set_ram, set_bbr, set_flash = config()
-        response = ""
-        while response != "ACK-ACK":
-            send_queue.put(set_bbr)
-            tries = 0
-            while config_queue.empty():
-                tries += 1
-                sleep(1)
-                if tries >= 5:
-                    break
-            response = config_queue.get()
-            if response == "ACK-ACK":
-                logger.info("Configuration to BBR is successful")
-            if response == "ACK-NAK":
-                logger.info("Configuration to BBR is unsuccessful")
-            config_queue.task_done()
-
-        response = ""
-        while response != "ACK-ACK":
-            send_queue.put(set_flash)
-            tries = 0
-            while config_queue.empty():
-                tries += 1
-                sleep(1)
-                if tries >= 5:
-                    break
-            response = config_queue.get()
-            if response == "ACK-ACK":
-                logger.info("Configuration to Flash is successful")
-            if response == "ACK-NAK":
-                logger.info("Configuration to Flash is unsuccessful")
-            config_queue.task_done()
-        
-        response = ""
-        while response != "ACK-ACK":
-            send_queue.put(set_ram)
-            tries = 0
-            while config_queue.empty():
-                tries += 1
-                sleep(1)
-                if tries >= 5:
-                    break
-            response = config_queue.get()
-            if response == "ACK-ACK":
-                logger.info("Configuration to RAM is successful")
-            if response == "ACK-NAK":
-                logger.info("Configuration to RAM is unsuccessful")
-            config_queue.task_done()
+        f9p_ready = False
+        config_success = 0
 
         # loop until user presses Ctrl-C
         while not stop_event.is_set():
             try:
+                if not f9p_ready:
+                    # Configure the F9P to specific parameter
+                    logger.info("Configuring the F9P...")
+                    set_ram, set_bbr, set_flash = config()
+                    response = ""
+                    while response != "ACK-ACK":
+                        send_queue.put(set_bbr)
+                        tries = 0
+                        while config_queue.empty():
+                            tries += 1
+                            sleep(1)
+                            if tries >= 5:
+                                break
+                        response = config_queue.get()
+                        if response == "ACK-ACK":
+                            logger.info("Configuration to BBR is successful")
+
+                        if response == "ACK-NAK":
+                            logger.info("Configuration to BBR is unsuccessful")
+                        config_queue.task_done()
+
+                    response = ""
+                    while response != "ACK-ACK":
+                        send_queue.put(set_flash)
+                        tries = 0
+                        while config_queue.empty():
+                            tries += 1
+                            sleep(1)
+                            if tries >= 5:
+                                break
+                        response = config_queue.get()
+                        if response == "ACK-ACK":
+                            logger.info("Configuration to Flash is successful")
+                        if response == "ACK-NAK":
+                            logger.info("Configuration to Flash is unsuccessful")
+                        config_queue.task_done()
+                    
+                    response = ""
+                    while response != "ACK-ACK":
+                        send_queue.put(set_ram)
+                        tries = 0
+                        while config_queue.empty():
+                            tries += 1
+                            sleep(1)
+                            if tries >= 5:
+                                break
+                        response = config_queue.get()
+                        if response == "ACK-ACK":
+                            logger.info("Configuration to RAM is successful")
+                        if response == "ACK-NAK":
+                            logger.info("Configuration to RAM is unsuccessful")
+                        config_queue.task_done()
+
                 #monitor ntrip client connection; rerun the client when it's disconnected
                 if ntrip_client.connected != True:
                     ntrip_client = ntrip_client(gga_queue, send_queue, kwargs)
