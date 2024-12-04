@@ -398,7 +398,7 @@ def main(**kwargs):
                         response = config_queue.get()
                         if response == "ACK-ACK":
                             logger.info("Configuration to BBR is successful")
-
+                            config_success += 1
                         if response == "ACK-NAK":
                             logger.info("Configuration to BBR is unsuccessful")
                         config_queue.task_done()
@@ -415,6 +415,7 @@ def main(**kwargs):
                         response = config_queue.get()
                         if response == "ACK-ACK":
                             logger.info("Configuration to Flash is successful")
+                            config_success += 1
                         if response == "ACK-NAK":
                             logger.info("Configuration to Flash is unsuccessful")
                         config_queue.task_done()
@@ -431,6 +432,7 @@ def main(**kwargs):
                         response = config_queue.get()
                         if response == "ACK-ACK":
                             logger.info("Configuration to RAM is successful")
+                            config_success += 1
                         if response == "ACK-NAK":
                             logger.info("Configuration to RAM is unsuccessful")
                         config_queue.task_done()
