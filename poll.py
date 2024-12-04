@@ -439,6 +439,7 @@ def main(**kwargs):
                     
                     if config_success == 3:
                         f9p_ready = True
+                        sleep(1)
                     else:
                         config_success = 0
 
