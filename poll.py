@@ -389,7 +389,7 @@ def main(**kwargs):
                     
                     response = ""
                     while response != "ACK-ACK":
-                        send_queue.put(set_flash)
+                        send_queue.put(set_ram)
                         tries = 0
                         while config_queue.empty():
                             tries += 1
@@ -398,10 +398,10 @@ def main(**kwargs):
                                 break
                         response = config_queue.get()
                         if response == "ACK-ACK":
-                            logger.info("Configuration to Flash is successful")
+                            logger.info("Configuration to RAM is successful")
                             config_success += 1
                         if response == "ACK-NAK":
-                            logger.info("Configuration to Flash is unsuccessful")
+                            logger.info("Configuration to RAM is unsuccessful")
                         config_queue.task_done()
                     
                     response = ""
@@ -423,7 +423,7 @@ def main(**kwargs):
                         
                     response = ""
                     while response != "ACK-ACK":
-                        send_queue.put(set_ram)
+                        send_queue.put(set_flash)
                         tries = 0
                         while config_queue.empty():
                             tries += 1
@@ -432,12 +432,12 @@ def main(**kwargs):
                                 break
                         response = config_queue.get()
                         if response == "ACK-ACK":
-                            logger.info("Configuration to RAM is successful")
+                            logger.info("Configuration to Flash is successful")
                             config_success += 1
                         if response == "ACK-NAK":
-                            logger.info("Configuration to RAM is unsuccessful")
+                            logger.info("Configuration to Flash is unsuccessful")
                         config_queue.task_done()
-                    
+
                     if config_success == 3:
                         f9p_ready = True
                         sleep(0.5)
