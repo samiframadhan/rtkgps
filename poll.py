@@ -113,6 +113,7 @@ def process_data(gga_queue: Queue, confirm_queue: Queue, data_queue: Queue, gps_
     PDOP = deque(maxlen=1)
     HDOP = deque(maxlen=1)
     VDOP = deque(maxlen=1)
+    speed = deque(maxlen=1)
     last_pdop = 0
     last_hdop = 0
     last_vdop = 0
@@ -146,6 +147,7 @@ def process_data(gga_queue: Queue, confirm_queue: Queue, data_queue: Queue, gps_
             # Update heading motion values if available
             if parsed.identity == "NAV-PVT":
                 heading.append(parsed.headMot)
+                speed.append(parsed.gSpeed)
 
             # Update DOP values if available
             if parsed.identity == "NAV-DOP":
@@ -164,7 +166,7 @@ def process_data(gga_queue: Queue, confirm_queue: Queue, data_queue: Queue, gps_
         data_queue.task_done()
 
         # Ensure all deques have data before putting into gps_queue
-        deq = [lat, long, height, fix, numSV, heading, PDOP, HDOP, VDOP]
+        deq = [lat, long, height, fix, numSV, heading, speed, PDOP, HDOP, VDOP]
         
         count = 0
         for val in deq:
@@ -172,7 +174,7 @@ def process_data(gga_queue: Queue, confirm_queue: Queue, data_queue: Queue, gps_
                 count = 1
         
         if count == 0:
-            gps_queue.put((lat, long, height, fix, numSV, heading, PDOP, HDOP, VDOP))
+            gps_queue.put((lat, long, height, fix, numSV, heading, speed, PDOP, HDOP, VDOP))
                 
 def ntrip(gga_queue: Queue, send_queue: Queue, stop: Event, kwargs):
     server = kwargs.get("server", "69.64.185.41")
@@ -220,9 +222,9 @@ def broadcast(tcp_server: TCPServer, gps_data_queue: Queue, ntrip_client: GNSSNT
 
         elif not gps_data_queue.empty():
             connect = "ON" if ntrip_client.connected == True else "OFF"
-            lat, long, height, fix, numSV, heading, PDOP, HDOP, VDOP = gps_data_queue.get()
+            lat, long, height, fix, numSV, heading, speed, PDOP, HDOP, VDOP = gps_data_queue.get()
             count = 0
-            for val in lat, long, height, fix, numSV, heading, PDOP, HDOP, VDOP:
+            for val in lat, long, height, fix, numSV, heading, speed, PDOP, HDOP, VDOP:
                 if len(val) == 0:
                     count = 1
 
@@ -231,6 +233,7 @@ def broadcast(tcp_server: TCPServer, gps_data_queue: Queue, ntrip_client: GNSSNT
                 long_data = Decimal(long.pop())
                 lat_data = Decimal(lat.pop())
                 heading_data = heading.pop()
+                speed_data = speed.pop() / 1000000 #in Kilometer
                     
                 type = fix.pop()
                 if type == 1:
@@ -245,7 +248,7 @@ def broadcast(tcp_server: TCPServer, gps_data_queue: Queue, ntrip_client: GNSSNT
                     fixtype = "Float"
                 else:
                     fixtype = str(fix)
-                message = f"{lat_data:.9f},{long_data:.9f},{height_m:.4f},{fixtype},{numSV.pop()},{PDOP.pop()},{HDOP.pop()},{VDOP.pop()},{heading_data:.1f},{connect}" + "\r\n"
+                message = f"{lat_data:.9f},{long_data:.9f},{height_m:.4f},{fixtype},{numSV.pop()},{PDOP.pop()},{HDOP.pop()},{VDOP.pop()},{heading_data:.1f},{speed_data:.1f},{connect}" + "\r\n"
                 last_data = message
                 logger.info(f"Broadcasting to tcp clients: {last_data}")
                 tcp_server.broadcast(message=last_data)
