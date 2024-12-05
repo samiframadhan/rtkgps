@@ -397,7 +397,7 @@ def main(**kwargs):
                             tries = 0
                             while config_queue.empty():
                                 tries += 1
-                                sleep(1)
+                                sleep(0.2)
                                 if tries >= 5:
                                     logger.info("Configuration to RAM is unsuccessful")
                                     break
@@ -415,7 +415,7 @@ def main(**kwargs):
                             tries = 0
                             while config_queue.empty():
                                 tries += 1
-                                sleep(1)
+                                sleep(0.2)
                                 if tries >= 5:
                                     logger.info("Configuration to BBR is unsuccessful")
                                     break
@@ -433,7 +433,7 @@ def main(**kwargs):
                             tries = 0
                             while config_queue.empty():
                                 tries += 1
-                                sleep(1)
+                                sleep(0.2)
                                 if tries >= 5:
                                     logger.info("Configuration to Flash is unsuccessful")
                                     break
@@ -447,7 +447,7 @@ def main(**kwargs):
 
                         if config_success == 3:
                             f9p_ready = True
-                            sleep(0.5)
+                            sleep(0.2)
                         else:
                             config_success = 0
 
