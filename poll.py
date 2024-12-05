@@ -404,6 +404,7 @@ def main(**kwargs):
                                 case 2:
                                     layer = "Flash"
                                     send_queue.put(set_flash)
+                            logger.info(f"Sent config layer {layer}")
                             tries = 0
                             res = True
                             while config_queue.empty():
