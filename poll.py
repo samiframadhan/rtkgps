@@ -318,8 +318,6 @@ def main(**kwargs):
     timeout = float(kwargs.get("timeout", 1))
 
     with connect_to_serial(port, baudrate, timeout=timeout) as serial_stream:
-        sleep(10)
-        
         ubxreader = UBXReader(
             serial_stream, 
             protfilter= UBX_PROTOCOL | NMEA_PROTOCOL)
