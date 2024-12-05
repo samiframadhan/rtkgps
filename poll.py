@@ -409,7 +409,7 @@ def main(**kwargs):
                             res = True
                             while config_queue.empty():
                                 tries += 1
-                                sleep(0.2)
+                                sleep(0.5)
                                 if tries >= 5:
                                     res = False
                                     logger.info(f"Configuration to {layer} is unsuccessful; No response from f9p")
