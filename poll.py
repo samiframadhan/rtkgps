@@ -206,6 +206,7 @@ def broadcast(tcp_server: TCPServer, gps_data_queue: Queue, ntrip_client: GNSSNT
     last_data = None
     data_freq = 0
     prev_broadcast = time()
+    first_complete = True
     seconds = 0
     while not stop.is_set():
         
@@ -229,6 +230,9 @@ def broadcast(tcp_server: TCPServer, gps_data_queue: Queue, ntrip_client: GNSSNT
                     count = 1
 
             if count == 0:
+                if first_complete:
+                    init_time = time()
+                    first_complete = False
                 height_m = height.pop() / 1000
                 long_data = Decimal(long.pop())
                 lat_data = Decimal(lat.pop())
