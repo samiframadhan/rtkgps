@@ -392,58 +392,37 @@ def main(**kwargs):
                     set_ram, set_bbr, set_flash = config()
                     if not f9p_ready:
                         response = ""
-                        while response != "ACK-ACK":
-                            send_queue.put(set_ram)
+                        while config_success <= 2:
+                            layer = ""
+                            match config_success:
+                                case 0:
+                                    layer = "RAM"
+                                    send_queue.put(set_ram)
+                                case 1:
+                                    layer = "BBR"
+                                    send_queue.put(set_bbr)
+                                case 2:
+                                    layer = "Flash"
+                                    send_queue.put(set_flash)
                             tries = 0
+                            res = True
                             while config_queue.empty():
                                 tries += 1
                                 sleep(0.2)
                                 if tries >= 5:
-                                    logger.info("Configuration to RAM is unsuccessful; No response from f9p")
+                                    res = False
+                                    logger.info(f"Configuration to {layer} is unsuccessful; No response from f9p")
                                     break
-                            response = config_queue.get()
-                            if response == "ACK-ACK":
-                                logger.info("Configuration to RAM is successful")
-                                config_success += 1
-                            if response == "ACK-NAK":
-                                logger.info("Configuration to RAM is unsuccessful")
-                            config_queue.task_done()
-                        
-                        response = ""
-                        while response != "ACK-ACK":
-                            send_queue.put(set_bbr)
-                            tries = 0
-                            while config_queue.empty():
-                                tries += 1
-                                sleep(0.2)
-                                if tries >= 5:
-                                    logger.info("Configuration to BBR is unsuccessful; No response from f9p")
-                                    break
-                            response = config_queue.get()
-                            if response == "ACK-ACK":
-                                logger.info("Configuration to BBR is successful")
-                                config_success += 1
-                            if response == "ACK-NAK":
-                                logger.info("Configuration to BBR is unsuccessful")
-                            config_queue.task_done()
-                            
-                        response = ""
-                        while response != "ACK-ACK":
-                            send_queue.put(set_flash)
-                            tries = 0
-                            while config_queue.empty():
-                                tries += 1
-                                sleep(0.2)
-                                if tries >= 5:
-                                    logger.info("Configuration to Flash is unsuccessful; No response from f9p")
-                                    break
-                            response = config_queue.get()
-                            if response == "ACK-ACK":
-                                logger.info("Configuration to Flash is successful")
-                                config_success += 1
-                            if response == "ACK-NAK":
-                                logger.info("Configuration to Flash is unsuccessful")
-                            config_queue.task_done()
+                            if res is True:
+                                response = config_queue.get()
+                                if response == "ACK-ACK":
+                                    logger.info(f"Configuration to {layer} is successful")
+                                    config_success += 1
+                                if response == "ACK-NAK":
+                                    logger.info(f"Configuration to {layer} is unsuccessful")
+                                config_queue.task_done()
+                            else:
+                                continue
 
                         if config_success == 3:
                             f9p_ready = True
