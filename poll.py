@@ -399,7 +399,7 @@ def main(**kwargs):
                                 tries += 1
                                 sleep(0.2)
                                 if tries >= 5:
-                                    logger.info("Configuration to RAM is unsuccessful")
+                                    logger.info("Configuration to RAM is unsuccessful; No response from f9p")
                                     break
                             response = config_queue.get()
                             if response == "ACK-ACK":
@@ -417,7 +417,7 @@ def main(**kwargs):
                                 tries += 1
                                 sleep(0.2)
                                 if tries >= 5:
-                                    logger.info("Configuration to BBR is unsuccessful")
+                                    logger.info("Configuration to BBR is unsuccessful; No response from f9p")
                                     break
                             response = config_queue.get()
                             if response == "ACK-ACK":
@@ -435,7 +435,7 @@ def main(**kwargs):
                                 tries += 1
                                 sleep(0.2)
                                 if tries >= 5:
-                                    logger.info("Configuration to Flash is unsuccessful")
+                                    logger.info("Configuration to Flash is unsuccessful; No response from f9p")
                                     break
                             response = config_queue.get()
                             if response == "ACK-ACK":
