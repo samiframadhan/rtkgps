@@ -421,8 +421,6 @@ def main(**kwargs):
                                     logger.info(f"Configuration to {layer} is unsuccessful; No response from f9p")
                                     if layer == "RAM":
                                         logger.info("Quitting ...")
-                                        stop_event.set()
-                                        return 0
                                     break
                             if res is True:
                                 response = config_queue.get()
@@ -433,7 +431,8 @@ def main(**kwargs):
                                     logger.info(f"Configuration to {layer} is unsuccessful")
                                 config_queue.task_done()
                             else:
-                                continue
+                                stop_event.set()
+                                break
 
                         if config_success == 3:
                             f9p_ready = True
