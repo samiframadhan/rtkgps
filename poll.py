@@ -317,7 +317,7 @@ def main(**kwargs):
     Main routine.
     """
 
-    port = kwargs.get("serport", "/dev/serial/by-id/usb-u-blox_AG_-_www.u-blox.com_u-blox_GNSS_receiver-if00")
+    port = kwargs.get("serport", "/dev/f9pdev")
     baudrate = int(kwargs.get("baudrate", 57600))
     timeout = float(kwargs.get("timeout", 1))
 
