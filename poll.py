@@ -237,7 +237,7 @@ def broadcast(tcp_server: TCPServer, gps_data_queue: Queue, ntrip_client: GNSSNT
                 long_data = Decimal(long.pop())
                 lat_data = Decimal(lat.pop())
                 heading_data = heading.pop()
-                speed_data = speed.pop() / 1000000 #in Kilometer
+                speed_data = speed.pop() / 1000000 * 3600 #in Kilometer/hour
                     
                 type = fix.pop()
                 if type == 1:
