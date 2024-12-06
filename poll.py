@@ -237,7 +237,7 @@ def broadcast(tcp_server: TCPServer, gps_data_queue: Queue, ntrip_client: GNSSNT
                 long_data = Decimal(long.pop())
                 lat_data = Decimal(lat.pop())
                 heading_data = heading.pop()
-                speed_data = speed.pop() / 1000000 * 3600 #in Kilometer/hour
+                speed_data = speed.pop() / 1000 #in meter/second
                     
                 type = fix.pop()
                 if type == 1:
@@ -265,15 +265,6 @@ def broadcast(tcp_server: TCPServer, gps_data_queue: Queue, ntrip_client: GNSSNT
             else:
                 gps_data_queue.task_done()
                 continue
-        
-
-        # elif time_ns() - prev_broadcast > 1: #if last count is more than 1 sec, broadcast last message
-        #     seconds = (time_ns() - prev_broadcast)/1000
-        #     data_freq = 1 / seconds
-        #     logger.info(f"{data_freq} msg per sec")
-        #     logger.info(f"Broadcasting to tcp clients: {last_data}")
-        #     tcp_server.broadcast(message=last_data)
-        #     prev_broadcast = time_ns()
             
 def config():
     layer = SET_LAYER_RAM
@@ -308,9 +299,8 @@ def connect_to_serial(port, baudrate, timeout):
             logger.info(f"Attempting to connect to {port}...")
             return Serial(port, baudrate, timeout=timeout)
         except Exception as e:
-            logger.error(f"Connection to {port} failed: {e}")
-            logger.info(f"Retrying in {RETRY_INTERVAL} seconds...")
-            time.sleep(RETRY_INTERVAL)
+            logger.info(f"Connection to {e} is failed")
+            return None
 
 def main(**kwargs):
     """
@@ -322,7 +312,8 @@ def main(**kwargs):
     timeout = float(kwargs.get("timeout", 1))
 
     with connect_to_serial(port, baudrate, timeout=timeout) as serial_stream:
-        sleep(2)
+        if serial_stream is None:
+            return 0
         ubxreader = UBXReader(
             serial_stream, 
             protfilter= UBX_PROTOCOL | NMEA_PROTOCOL)
