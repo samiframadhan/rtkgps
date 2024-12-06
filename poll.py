@@ -422,6 +422,7 @@ def main(**kwargs):
                                     if layer == "RAM":
                                         logger.info("Quitting ...")
                                         stop_event.set()
+                                        return 0
                                     break
                             if res is True:
                                 response = config_queue.get()
