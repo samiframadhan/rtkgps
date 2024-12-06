@@ -419,6 +419,9 @@ def main(**kwargs):
                                 if tries >= 5:
                                     res = False
                                     logger.info(f"Configuration to {layer} is unsuccessful; No response from f9p")
+                                    if layer == "RAM":
+                                        logger.info("Quitting ...")
+                                        stop_event.set()
                                     break
                             if res is True:
                                 response = config_queue.get()
