@@ -201,28 +201,28 @@ def ntrip(gga_queue: Queue, send_queue: Queue, stop: Event, kwargs):
     return gnc
 
 def broadcast(tcp_server: TCPServer, gps_data_queue: Queue, ntrip_client: GNSSNTRIPClient, stop: Event):
-    init_time = time()
-    rate_count = 0
+    last_broadcast_time = None
     last_data = None
-    data_freq = 0
-    prev_broadcast = time()
-    first_complete = True
-    seconds = 0
+    
+    # Moving average setup
+    window_size = 10  # Use the last 10 intervals for the moving average
+    recent_intervals = deque(maxlen=window_size)
+    
     while not stop.is_set():
+        current_time = time()
         
-        if seconds != 0:
-            seconds = time() - init_time
-            data_freq = rate_count / seconds
-
-        if data_freq <= 1 and last_data != None:
-            rate_count += 1
-            seconds = time() - init_time
-            tcp_server.broadcast(message=last_data)
-            logger.info(f"Broadcasting to tcp clients: {last_data}")
-            logger.info(f"{data_freq:.2f} msg per sec")
-
-        elif not gps_data_queue.empty():
-            connect = "ON" if ntrip_client.connected == True else "OFF"
+        # Enforce minimum rate of 1 Hz (1 message per second)
+        if last_broadcast_time is not None and (current_time - last_broadcast_time > 1):
+            if last_data is not None:
+                tcp_server.broadcast(message=last_data)
+                logger.warning(f"Minimum rate enforced: Broadcasting last known data: {last_data}")
+                # Update last broadcast time
+                last_broadcast_time = current_time
+                # Record the interval for moving average
+                recent_intervals.append(1.0)  # Assume 1 second since last broadcast
+        
+        if not gps_data_queue.empty():
+            connect = "ON" if ntrip_client.connected else "OFF"
             lat, long, height, fix, numSV, heading, speed, PDOP, HDOP, VDOP = gps_data_queue.get()
             count = 0
             for val in lat, long, height, fix, numSV, heading, speed, PDOP, HDOP, VDOP:
@@ -230,36 +230,46 @@ def broadcast(tcp_server: TCPServer, gps_data_queue: Queue, ntrip_client: GNSSNT
                     count = 1
 
             if count == 0:
-                if first_complete:
-                    init_time = time()
-                    first_complete = False
                 height_m = height.pop() / 1000
                 long_data = Decimal(long.pop())
                 lat_data = Decimal(lat.pop())
                 heading_data = heading.pop()
-                speed_data = speed.pop() / 1000 #in meter/second
+                speed_data = speed.pop() / 1000  # in meter/second
                     
                 type = fix.pop()
-                if type == 1:
-                    fixtype = "GPS"
-                elif type == 2:
-                    fixtype = "DGPS"
-                elif type == 3:
-                    fixtype = "3D"
-                elif type == 4:
-                    fixtype = "FIX"
-                elif type == 5:
-                    fixtype = "Float"
-                else:
-                    fixtype = str(fix)
+                # Using match-case for fixtype determination
+                match type:
+                    case 1:
+                        fixtype = "GPS"
+                    case 2:
+                        fixtype = "DGPS"
+                    case 3:
+                        fixtype = "3D"
+                    case 4:
+                        fixtype = "FIX"
+                    case 5:
+                        fixtype = "Float"
+                    case _:
+                        fixtype = str(type)
+                
                 message = f"{lat_data:.9f},{long_data:.9f},{height_m:.4f},{fixtype},{numSV.pop()},{PDOP.pop()},{HDOP.pop()},{VDOP.pop()},{heading_data:.1f},{speed_data:.1f},{connect}" + "\r\n"
                 last_data = message
-                logger.info(f"Broadcasting to tcp clients: {last_data}")
                 tcp_server.broadcast(message=last_data)
-                rate_count += 1
-                seconds = time() - init_time
+                logger.info(f"Broadcasting to tcp clients: {last_data}")
                 
-                logger.info(f"{data_freq:.2f} msg per sec")
+                # Calculate interval and update moving average
+                if last_broadcast_time is not None:
+                    interval = current_time - last_broadcast_time
+                    recent_intervals.append(interval)
+                last_broadcast_time = current_time
+                
+                # Calculate rates
+                if len(recent_intervals) > 0:
+                    moving_avg_rate = len(recent_intervals) / sum(recent_intervals)  # messages per second
+                else:
+                    moving_avg_rate = 0
+                
+                logger.info(f"Moving Avg Rate: {moving_avg_rate:.2f} msg/sec")
                 
                 gps_data_queue.task_done()
             else:
