@@ -390,7 +390,6 @@ def main(**kwargs):
                         response = ""
                         while config_success <= 2:
                             layer = ""
-                            sleep(10)
                             match config_success:
                                 case 0:
                                     layer = "RAM"
