@@ -280,7 +280,7 @@ def config():
                 ("CFG_MSGOUT_UBX_NAV_POSLLH_USB", 0),
                 ("CFG_MSGOUT_UBX_NAV_STATUS_USB", 0),
                 ("CFG_MSGOUT_UBX_NAV_PVT_USB", 1),
-                ("CFG_RATE_MEAS", 80),
+                ("CFG_RATE_MEAS", 100),
                 ("CFG_RATE_NAV", 2),
             ]
     msg_ram = UBXMessage.config_set(layer, transaction=0, cfgData=configs)
