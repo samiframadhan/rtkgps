@@ -179,7 +179,7 @@ def process_data(gga_queue: Queue, confirm_queue: Queue, data_queue: Queue, gps_
 def ntrip(gga_queue: Queue, send_queue: Queue, stop: Event, kwargs):
     server = kwargs.get("server", "69.64.185.41")
     port = int(kwargs.get("port", 7801))
-    mountpoint = kwargs.get("mountpoint", "MSM4")
+    mountpoint = kwargs.get("mountpoint", "MSM5")
     user = kwargs.get("user", getenv("PYGPSCLIENT_USER", "grk28"))
     password = kwargs.get("password", getenv("PYGPSCLIENT_PASSWORD", "730d2"))
 
