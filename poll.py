@@ -53,7 +53,7 @@ from tcp import TCPServer
 
 getcontext().prec = 9
 
-log_file = f"/var/log/your-service-{datetime.now().strftime('%Y%m%d%H%M%S')}.log"
+log_file = f"./rtkgps-{datetime.now().strftime('%Y%m%d%H%M%S')}.log"
 
 logger = getLogger("rtkgps")
 set_logging(getLogger("ntripclient"), VERBOSITY_HIGH, logtofile=log_file)
