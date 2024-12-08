@@ -26,8 +26,9 @@ from queue import Queue, Empty
 from sys import argv
 from os import getenv
 from threading import Event, Thread
-from time import sleep, time, time_ns
-from logging import getLogger
+import datetime
+from time import sleep, time
+from logging import getLogger, basicConfig
 from collections import deque
 from decimal import Decimal, getcontext
 
@@ -52,10 +53,13 @@ from tcp import TCPServer
 
 getcontext().prec = 9
 
+log_file = f"/var/log/your-service-{datetime.now().strftime('%Y%m%d%H%M%S')}.log"
+
 logger = getLogger("rtkgps")
-set_logging(getLogger("ntripclient"), VERBOSITY_HIGH)
-set_logging(getLogger("tcp"), VERBOSITY_HIGH)
-set_logging(getLogger("rtkgps"), VERBOSITY_HIGH)
+set_logging(getLogger("ntripclient"), VERBOSITY_HIGH, logtofile=log_file)
+set_logging(getLogger("tcp"), VERBOSITY_HIGH, logtofile=log_file)
+set_logging(getLogger("rtkgps"), VERBOSITY_HIGH, logtofile=log_file)
+
 RETRY_INTERVAL = 2
 ntrip_client = None
 
