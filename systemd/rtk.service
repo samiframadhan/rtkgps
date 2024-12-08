@@ -4,14 +4,15 @@ After=network.target  # Wait for the network to be up if your app requires it
 Requires=f9pdev.device
 
 [Service]
-ExecStartPre=/bin/sleep 20
+ExecStartPre=/bin/sleep 2
 ExecStart=/home/upendra/pyubx2/.venv/bin/python3 /home/upendra/pyubx2/rtkgps/poll.py
 ExecReload=/home/upendra/pyubx2/.venv/bin/python3 /home/upendra/pyubx2/rtkgps/poll.py
 RestartSec=2
-Restart=on-failure
+Restart=always
 KillMode=process
 SyslogIdentifier=rtk-f9p
-StandardOutput=syslog
+StandardOutput=null
+StandardError=null
 
 [Install]
 WantedBy=default.target
