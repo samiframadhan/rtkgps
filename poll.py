@@ -24,7 +24,7 @@ Created 29 Nov 2024
 
 from queue import Queue, Empty
 from sys import argv
-from os import getenv
+from os import getenv, getcwd
 from threading import Event, Thread
 from datetime import datetime
 from time import sleep, time
@@ -53,7 +53,9 @@ from tcp import TCPServer
 
 getcontext().prec = 9
 
-log_file = f"./rtkgps-{datetime.now().strftime('%Y%m%d%H%M%S')}.log"
+cwd = getcwd()
+log_file = f"{cwd}/rtkgps-{datetime.now().strftime('%Y%m%d%H%M%S')}.log"
+print(cwd)
 
 logger = getLogger("rtkgps")
 set_logging(getLogger("ntripclient"), VERBOSITY_HIGH, logtofile=log_file)
