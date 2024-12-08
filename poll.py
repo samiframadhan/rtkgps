@@ -56,7 +56,10 @@ getcontext().prec = 9
 cwd = path.dirname(path.abspath(__file__))
 logdir = path.join(cwd, "logs")
 makedirs(logdir, exist_ok=True)
-log_file = path.join(logdir, f"rtkgps-{datetime.now().strftime('%Y%m%d%H%M%S')}.log")
+log_file = path.join(
+    logdir, 
+    f"rtkgps-{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.log"
+)
 
 logger = getLogger("rtkgps")
 set_logging(getLogger("ntripclient"), VERBOSITY_HIGH, logtofile=log_file)
