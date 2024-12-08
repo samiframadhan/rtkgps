@@ -54,7 +54,7 @@ from tcp import TCPServer
 getcontext().prec = 9
 
 cwd = getcwd()
-log_file = f"/home/upendra/pyubx2/rtkgp/logs/rtkgps-{datetime.now().strftime('%Y%m%d%H%M%S')}.log"
+log_file = f"/var/log/rtkgps/rtkgps-{datetime.now().strftime('%Y%m%d%H%M%S')}.log"
 
 logger = getLogger("rtkgps")
 set_logging(getLogger("ntripclient"), VERBOSITY_HIGH, logtofile=log_file)
