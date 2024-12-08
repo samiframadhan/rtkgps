@@ -26,7 +26,7 @@ from queue import Queue, Empty
 from sys import argv
 from os import getenv
 from threading import Event, Thread
-import datetime
+from datetime import datetime
 from time import sleep, time
 from logging import getLogger, basicConfig
 from collections import deque
