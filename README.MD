@@ -1,5 +1,3 @@
----
-
 # **RTK-GPS Service Documentation**
 
 ## **Overview**
