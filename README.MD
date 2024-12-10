@@ -14,10 +14,6 @@ This project interfaces a Raspberry Pi Zero W with a Zed-F9P RTK GPS module, lev
    - Zed-F9P RTK GPS Module.
 2. **Software**:
    - Python 3 (recommended to use a virtual environment).
-   - Required Python modules:
-     - `pyubx2`
-     - `pygnssutils`
-     - `ntripclient`
    - `udev` rules for device configuration.
    - `systemd` for service management.
 
