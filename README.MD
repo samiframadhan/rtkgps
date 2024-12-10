@@ -91,6 +91,8 @@ WantedBy=default.target
 
 Replace `/path/to/project` with the actual project directory path.
 
+Similar file can be found on the systemd/ directory for reference.
+
 ### 2. **Reload Systemd and Enable the Service**
 Reload the systemd daemon to register the new service:
 ```bash
